@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { SliderModule } from 'primeng/slider';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
+import { SliderChangeEvent } from 'primeng/slider';
+import { InputNumberInputEvent } from 'primeng/inputnumber';
 
 export interface ParameterSpec {
   name: string;
@@ -136,16 +138,21 @@ export class ParameterSliderComponent {
     return decimalIndex === -1 ? 0 : stepStr.length - decimalIndex - 1;
   }
 
-  onSliderChange(event: { value: number }): void {
-    this.valueChange.emit(event.value);
+  onSliderChange(event: SliderChangeEvent): void {
+    if (event.value !== undefined && typeof event.value === 'number') {
+      this.valueChange.emit(event.value);
+    }
   }
 
-  onInputChange(event: { value: number }): void {
-    const clampedValue = Math.min(
-      Math.max(event.value, this.parameter.min),
-      this.parameter.max
-    );
-    this.value = clampedValue;
-    this.valueChange.emit(clampedValue);
+  onInputChange(event: InputNumberInputEvent): void {
+    const val = event.value;
+    if (val !== null && val !== undefined && typeof val === 'number') {
+      const clampedValue = Math.min(
+        Math.max(val, this.parameter.min),
+        this.parameter.max
+      );
+      this.value = clampedValue;
+      this.valueChange.emit(clampedValue);
+    }
   }
 }

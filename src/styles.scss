@@ -1,10 +1,4 @@
-// Import PrimeNG styles
-@import "primeng/resources/themes/lara-dark-indigo/theme.css";
-@import "primeng/resources/primeng.css";
-@import "primeicons/primeicons.css";
-@import "primeflex/primeflex.css";
-
-// Import custom styles
+// Import custom styles using @use
 @use 'styles/variables' as *;
 @use 'styles/primeng-theme';
 

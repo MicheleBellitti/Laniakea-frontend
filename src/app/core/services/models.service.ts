@@ -40,7 +40,10 @@ export class ModelsService {
     this._error.set(null);
 
     try {
-      const params = problemType ? { problem_type: problemType } : {};
+      const params: Record<string, string> = {};
+      if (problemType) {
+        params['problem_type'] = problemType;
+      }
       const response = await firstValueFrom(
         this.api.get<ModelsResponse>('/models', params)
       );
