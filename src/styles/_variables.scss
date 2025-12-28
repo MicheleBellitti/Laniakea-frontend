@@ -1,0 +1,70 @@
+// Dark theme colors (astrophysics-inspired)
+$primary-color: #6366f1;      // Indigo
+$secondary-color: #8b5cf6;    // Purple
+$surface-color: #1f2937;      // Dark gray
+$surface-light: #374151;      // Lighter gray
+$surface-dark: #111827;       // Darker gray
+$text-primary: #f3f4f6;       // Almost white
+$text-secondary: #9ca3af;     // Gray
+$accent-stellar: #f59e0b;     // Amber (stars)
+$accent-gravity: #3b82f6;     // Blue (gravity)
+$accent-quantum: #ec4899;     // Pink (quantum)
+$accent-thermo: #ef4444;      // Red (thermodynamics)
+
+// Status colors
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$error-color: #ef4444;
+$info-color: #3b82f6;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$border-radius-full: 9999px;
+
+// Shadows
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+
+// Typography
+$font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+$font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+$font-size-xs: 0.75rem;   // 12px
+$font-size-sm: 0.875rem;  // 14px
+$font-size-base: 1rem;    // 16px
+$font-size-lg: 1.125rem;  // 18px
+$font-size-xl: 1.25rem;   // 20px
+$font-size-2xl: 1.5rem;   // 24px
+$font-size-3xl: 1.875rem; // 30px
+$font-size-4xl: 2.25rem;  // 36px
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+$transition-slow: 300ms ease;
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Z-index layers
+$z-dropdown: 100;
+$z-modal: 200;
+$z-tooltip: 300;
+$z-notification: 400;

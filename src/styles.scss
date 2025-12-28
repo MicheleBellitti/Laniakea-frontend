@@ -1,0 +1,228 @@
+// Import PrimeNG styles
+@import "primeng/resources/themes/lara-dark-indigo/theme.css";
+@import "primeng/resources/primeng.css";
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
+
+// Import custom styles
+@use 'styles/variables' as *;
+@use 'styles/primeng-theme';
+
+// Reset and base styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: 1.5;
+  color: $text-primary;
+  background: $surface-dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  color: $text-primary;
+}
+
+h1 { font-size: $font-size-4xl; }
+h2 { font-size: $font-size-3xl; }
+h3 { font-size: $font-size-2xl; }
+h4 { font-size: $font-size-xl; }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-base; }
+
+p {
+  color: $text-secondary;
+  margin-bottom: $spacing-md;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: lighten($primary-color, 10%);
+  }
+}
+
+code, pre {
+  font-family: $font-family-mono;
+}
+
+code {
+  background: $surface-light;
+  padding: 2px 6px;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+}
+
+pre {
+  background: $surface-color;
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  overflow-x: auto;
+}
+
+// Utility classes
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+
+  @media (min-width: $breakpoint-lg) {
+    padding: 0 $spacing-lg;
+  }
+}
+
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-accent { color: $primary-color; }
+
+.bg-surface { background: $surface-color; }
+.bg-surface-dark { background: $surface-dark; }
+.bg-surface-light { background: $surface-light; }
+
+.rounded-sm { border-radius: $border-radius-sm; }
+.rounded-md { border-radius: $border-radius-md; }
+.rounded-lg { border-radius: $border-radius-lg; }
+.rounded-xl { border-radius: $border-radius-xl; }
+.rounded-full { border-radius: $border-radius-full; }
+
+.shadow-sm { box-shadow: $shadow-sm; }
+.shadow-md { box-shadow: $shadow-md; }
+.shadow-lg { box-shadow: $shadow-lg; }
+.shadow-glow { box-shadow: $shadow-glow; }
+
+// Category badge colors
+.badge-stellar {
+  background: rgba($accent-stellar, 0.2);
+  color: $accent-stellar;
+}
+
+.badge-gravity {
+  background: rgba($accent-gravity, 0.2);
+  color: $accent-gravity;
+}
+
+.badge-quantum {
+  background: rgba($accent-quantum, 0.2);
+  color: $accent-quantum;
+}
+
+.badge-thermodynamics {
+  background: rgba($accent-thermo, 0.2);
+  color: $accent-thermo;
+}
+
+// Animation utilities
+.fade-in {
+  animation: fadeIn $transition-slow forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+  animation: slideIn $transition-slow forwards;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $surface-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $surface-light;
+  border-radius: $border-radius-full;
+
+  &:hover {
+    background: lighten($surface-light, 10%);
+  }
+}
+
+// Selection styling
+::selection {
+  background: rgba($primary-color, 0.3);
+  color: $text-primary;
+}
+
+// Focus visible styling
+:focus-visible {
+  outline: 2px solid $primary-color;
+  outline-offset: 2px;
+}
+
+// Loading state
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba($surface-dark, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  backdrop-filter: blur(4px);
+}
+
+// KaTeX styling adjustments
+.katex {
+  font-size: 1.1em;
+  color: $text-primary;
+}
+
+.katex-display {
+  margin: $spacing-md 0;
+  padding: $spacing-md;
+  background: $surface-color;
+  border-radius: $border-radius-md;
+  overflow-x: auto;
+}
+
+// Plotly styling adjustments
+.js-plotly-plot {
+  border-radius: $border-radius-md;
+  overflow: hidden;
+}
+
+// Three.js container
+.three-container {
+  width: 100%;
+  height: 100%;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+
+  canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
