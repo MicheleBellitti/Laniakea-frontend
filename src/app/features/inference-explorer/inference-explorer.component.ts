@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ModelsService, InferenceService, PhysicsService } from '../../core/services';
-import { PredictionResult, ModelDetail, InputDomain } from '../../core/models';
+import { PredictionResult, ModelDetail, InputDomain, DomainVariable } from '../../core/models';
 import { ParameterPanelComponent, ParameterValues, RangeConfig } from './parameter-panel/parameter-panel.component';
 import { ResultsPanelComponent } from './results-panel/results-panel.component';
 import { PlotlyChartComponent, PlotlyData, PlotlyLayout } from '../visualization/plotly-chart/plotly-chart.component';
@@ -520,15 +520,20 @@ export class InferenceExplorerComponent implements OnInit {
 
     // Handle both camelCase and snake_case from API
     const modelAny = model as unknown as Record<string, unknown>;
-    const problemParams = model.problemParams || modelAny['problem_params'] as typeof model.problemParams;
+    const problemParams = model.problemParams || modelAny['problem_params'];
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
 
+    // problemParams can be either an array (mock data) or object (real API)
     if (Array.isArray(problemParams)) {
       problemParams.forEach(p => {
         const pAny = p as unknown as Record<string, unknown>;
         const trainedValue = p.trainedValue ?? pAny['trained_value'] as number | undefined;
         defaults[p.name] = trainedValue ?? p.default;
       });
+    } else if (problemParams && typeof problemParams === 'object') {
+      // Real API returns problem_params as an object - use it directly for predictions
+      // Store the raw object for later use
+      Object.assign(defaults, problemParams);
     }
     this.parameterValues.set(defaults);
 
@@ -543,6 +548,17 @@ export class InferenceExplorerComponent implements OnInit {
         max: inputVar.max,
         steps: 100,
       });
+    } else {
+      // Fallback: derive range from problem_params or use defaults
+      const paramsObj = problemParams as unknown as Record<string, unknown>;
+      const domainSize = paramsObj?.['domain_size'] as number;
+      if (domainSize) {
+        this.rangeConfig.set({
+          min: -domainSize,
+          max: domainSize,
+          steps: 100,
+        });
+      }
     }
 
     // Auto-run prediction on load
@@ -560,6 +576,51 @@ export class InferenceExplorerComponent implements OnInit {
 
   onRangeChange(config: RangeConfig): void {
     this.rangeConfig.set(config);
+  }
+
+  /**
+   * Creates default input variables based on problem type and input dimension.
+   */
+  private getDefaultInputVariables(problemType: string, inputDim: number): DomainVariable[] {
+    const range = this.rangeConfig();
+
+    if (problemType === 'lane_emden' || problemType === 'lane-emden') {
+      return [{ name: 'xi', symbol: 'ξ', min: range.min, max: range.max, description: 'Dimensionless radius' }];
+    }
+
+    if (problemType === 'poisson_gravity' || problemType === 'poisson-gravity' || problemType.startsWith('poisson')) {
+      if (inputDim === 2) {
+        return [
+          { name: 'x', symbol: 'x', min: range.min, max: range.max, description: 'X coordinate' },
+          { name: 'y', symbol: 'y', min: range.min, max: range.max, description: 'Y coordinate' }
+        ];
+      }
+      return [{ name: 'r', symbol: 'r', min: range.min, max: range.max, description: 'Radial coordinate' }];
+    }
+
+    if (problemType === 'schrodinger_1d' || problemType === 'schrodinger-1d') {
+      return [{ name: 'x', symbol: 'x', min: range.min, max: range.max, description: 'Position' }];
+    }
+
+    if (problemType === 'heat_diffusion' || problemType === 'heat-diffusion') {
+      if (inputDim === 2) {
+        return [
+          { name: 'x', symbol: 'x', min: range.min, max: range.max, description: 'Position' },
+          { name: 't', symbol: 't', min: 0, max: 1, description: 'Time' }
+        ];
+      }
+      return [{ name: 'x', symbol: 'x', min: range.min, max: range.max, description: 'Position' }];
+    }
+
+    // Default: generate x, y, z... based on input dimension
+    const varNames = ['x', 'y', 'z', 'w'];
+    return varNames.slice(0, inputDim).map(name => ({
+      name,
+      symbol: name,
+      min: range.min,
+      max: range.max,
+      description: `${name.toUpperCase()} coordinate`
+    }));
   }
 
   /**
@@ -622,29 +683,23 @@ export class InferenceExplorerComponent implements OnInit {
     const range = this.rangeConfig();
     const params = this.parameterValues();
 
-    // Debug: log full model structure to understand API response
-    console.log('Full model structure:', JSON.stringify(model, null, 2));
-
-    // Get the input variable name from the model's input domain
-    // Handle both camelCase (inputDomain) and snake_case (input_domain) from API
+    // Get the input variable info from the model
     const modelAny = model as unknown as Record<string, unknown>;
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
-
-    console.log('inputDomain:', inputDomain);
+    const architecture = model.architecture || modelAny['architecture'] as Record<string, unknown>;
+    const problemType = model.problemType || modelAny['problem_type'] as string;
 
     // Handle both 'variables' and 'input_variables' from API
     const inputDomainAny = inputDomain as unknown as Record<string, unknown>;
-    const variables = inputDomain?.variables || inputDomainAny?.['input_variables'] as typeof inputDomain.variables;
+    let variables = inputDomain?.variables || inputDomainAny?.['input_variables'] as typeof inputDomain.variables;
 
-    console.log('variables:', variables);
-
+    // If no variables defined, create defaults based on architecture and problem type
     if (!variables || variables.length === 0) {
-      console.error('No input variables found in model definition');
-      return;
+      const archAny = architecture as unknown as Record<string, unknown>;
+      const inputDim = (architecture?.inputDim || archAny?.['input_dim'] || 1) as number;
+      variables = this.getDefaultInputVariables(problemType, inputDim);
     }
 
-    // Use the 'name' field directly from the API response - it contains the correct variable name
-    // The API returns input_variables with 'name' field set to the expected variable name (e.g., 'xi' for Lane-Emden)
     const firstVariable = variables[0];
     const inputVarName = firstVariable.name || firstVariable.symbol || 'x';
 
