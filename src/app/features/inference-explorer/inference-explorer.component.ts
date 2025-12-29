@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ModelsService, InferenceService, PhysicsService } from '../../core/services';
-import { PredictionResult, ModelDetail } from '../../core/models';
+import { PredictionResult, ModelDetail, InputDomain } from '../../core/models';
 import { ParameterPanelComponent, ParameterValues, RangeConfig } from './parameter-panel/parameter-panel.component';
 import { ResultsPanelComponent } from './results-panel/results-panel.component';
 import { PlotlyChartComponent, PlotlyData, PlotlyLayout } from '../visualization/plotly-chart/plotly-chart.component';
@@ -383,46 +383,107 @@ export class InferenceExplorerComponent implements OnInit {
 
   chartData = computed<PlotlyData[]>(() => {
     const result = this.predictionResult();
+    const model = this.model();
     if (!result) return [];
 
     const inputs = result.inputs;
     const outputs = result.outputs;
 
-    const inputKey = Object.keys(inputs)[0];
-    const outputKey = Object.keys(outputs)[0];
+    const inputKeys = Object.keys(inputs);
+    const outputKeys = Object.keys(outputs);
 
-    if (!inputKey || !outputKey) return [];
+    if (inputKeys.length === 0 || outputKeys.length === 0) return [];
 
-    const xData = inputs[inputKey];
-    const yData = outputs[outputKey];
+    const xData = inputs[inputKeys[0]];
+    if (!Array.isArray(xData)) return [];
 
-    if (!Array.isArray(xData) || !Array.isArray(yData)) return [];
-    if (Array.isArray(yData[0])) return []; // 2D output not supported yet
+    // Color palette for multiple traces
+    const colors = ['#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
 
-    return [{
-      x: xData,
-      y: yData as number[],
-      type: 'scatter',
-      mode: 'lines',
-      name: outputKey,
-      line: {
-        color: '#7c3aed',
-        width: 3,
-      },
-      hovertemplate: `${inputKey}: %{x:.4f}<br>${outputKey}: %{y:.4f}<extra></extra>`,
-    }];
+    // Check if any output is 2D (for heatmap/surface plots)
+    const firstOutput = outputs[outputKeys[0]];
+    if (Array.isArray(firstOutput) && Array.isArray(firstOutput[0])) {
+      // 2D output - create heatmap
+      const zData = firstOutput as number[][];
+      return [{
+        x: xData,
+        y: Array.from({ length: zData.length }, (_, i) => i),
+        z: zData,
+        type: 'heatmap',
+        colorscale: 'Viridis',
+        colorbar: {
+          title: outputKeys[0],
+          tickfont: { color: '#9ca3af' },
+        },
+        hovertemplate: `${inputKeys[0]}: %{x:.4f}<br>y: %{y}<br>${outputKeys[0]}: %{z:.4f}<extra></extra>`,
+      }];
+    }
+
+    // Get input symbol for hover template
+    const modelAny = model as unknown as Record<string, unknown>;
+    const domain = model?.inputDomain || modelAny?.['input_domain'] as InputDomain | undefined;
+    const inputSymbol = domain?.variables?.[0]?.symbol || inputKeys[0];
+
+    // 1D outputs - create line traces for each output variable
+    const traces = outputKeys.map((outputKey, index) => {
+      const yData = outputs[outputKey];
+      if (!Array.isArray(yData) || Array.isArray(yData[0])) {
+        return null;
+      }
+
+      return {
+        x: xData,
+        y: yData as number[],
+        type: 'scatter' as const,
+        mode: 'lines' as const,
+        name: outputKey,
+        line: {
+          color: colors[index % colors.length],
+          width: 2.5,
+        },
+        hovertemplate: `${inputSymbol}: %{x:.4f}<br>${outputKey}: %{y:.6f}<extra></extra>`,
+      };
+    }).filter((trace): trace is NonNullable<typeof trace> => trace !== null);
+
+    return traces;
   });
 
   chartLayout = computed<Partial<PlotlyLayout>>(() => {
     const result = this.predictionResult();
+    const model = this.model();
     if (!result) return {};
 
-    const inputKey = Object.keys(result.inputs)[0];
-    const outputKey = Object.keys(result.outputs)[0];
+    const inputKeys = Object.keys(result.inputs);
+    const outputKeys = Object.keys(result.outputs);
+
+    // Get axis labels from model metadata with symbols
+    const modelAny = model as unknown as Record<string, unknown>;
+    const domain = model?.inputDomain || modelAny?.['input_domain'] as InputDomain | undefined;
+    const inputVar = domain?.variables?.[0];
+
+    const xLabel = inputVar?.symbol
+      ? `${inputVar.symbol} (${inputVar.name || inputKeys[0]})`
+      : inputKeys[0] || 'x';
+
+    const yLabel = outputKeys.length === 1 ? outputKeys[0] : 'Output';
 
     return {
-      xaxis: { title: inputKey || 'x' },
-      yaxis: { title: outputKey || 'y' },
+      xaxis: {
+        title: xLabel,
+        gridcolor: 'rgba(75, 85, 99, 0.3)',
+      },
+      yaxis: {
+        title: yLabel,
+        gridcolor: 'rgba(75, 85, 99, 0.3)',
+      },
+      showlegend: outputKeys.length > 1,
+      legend: {
+        x: 1,
+        y: 1,
+        xanchor: 'right',
+        bgcolor: 'rgba(31, 41, 55, 0.8)',
+        font: { color: '#e5e7eb' },
+      },
     };
   });
 

@@ -64,6 +64,8 @@ export interface PlotlyLayout {
   legend?: {
     x?: number;
     y?: number;
+    xanchor?: 'left' | 'center' | 'right' | 'auto';
+    yanchor?: 'top' | 'middle' | 'bottom' | 'auto';
     bgcolor?: string;
     font?: { color?: string };
   };
