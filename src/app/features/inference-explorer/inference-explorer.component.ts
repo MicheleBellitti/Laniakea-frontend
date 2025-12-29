@@ -412,25 +412,39 @@ export class InferenceExplorerComponent implements OnInit {
   chartData = computed<PlotlyData[]>(() => {
     const result = this.predictionResult();
     const model = this.model();
-    if (!result) return [];
+    if (!result) {
+      console.log('chartData: No prediction result');
+      return [];
+    }
 
     const inputs = result.inputs;
     const outputs = result.outputs;
     const inputKeys = Object.keys(inputs);
     const outputKeys = Object.keys(outputs);
 
-    if (inputKeys.length === 0 || outputKeys.length === 0) return [];
+    console.log('chartData: inputKeys =', inputKeys, 'outputKeys =', outputKeys);
+
+    if (inputKeys.length === 0 || outputKeys.length === 0) {
+      console.log('chartData: No inputs or outputs');
+      return [];
+    }
 
     const modelAny = model as unknown as Record<string, unknown>;
     const pType = model?.problemType || modelAny?.['problem_type'] as string || '';
 
+    console.log('chartData: problemType =', pType, 'is2D =', inputKeys.length >= 2);
+
     // Check if this is a 2D problem (two input variables like x, y)
     if (inputKeys.length >= 2) {
-      return this.create2DVisualization(inputs, outputs, inputKeys, outputKeys, pType);
+      const data = this.create2DVisualization(inputs, outputs, inputKeys, outputKeys, pType);
+      console.log('chartData: 2D visualization data =', data);
+      return data;
     }
 
     // 1D problem visualization
-    return this.create1DVisualization(inputs, outputs, inputKeys, outputKeys, pType, model);
+    const data = this.create1DVisualization(inputs, outputs, inputKeys, outputKeys, pType, model);
+    console.log('chartData: 1D visualization data =', data);
+    return data;
   });
 
   private create2DVisualization(
@@ -974,6 +988,11 @@ export class InferenceExplorerComponent implements OnInit {
         inputs,
         parameters: params,
       });
+
+      console.log('Prediction result:', JSON.stringify(result, null, 2));
+      console.log('Input keys:', Object.keys(result.inputs || {}));
+      console.log('Output keys:', Object.keys(result.outputs || {}));
+
       this.predictionResult.set(result);
     } catch (error) {
       console.error('Prediction failed:', error);
