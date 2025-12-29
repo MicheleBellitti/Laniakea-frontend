@@ -558,6 +558,59 @@ export class InferenceExplorerComponent implements OnInit {
     this.rangeConfig.set(config);
   }
 
+  /**
+   * Normalizes a variable symbol to the ASCII name expected by the API.
+   * Maps Greek letters and other symbols to their ASCII equivalents.
+   */
+  private normalizeVariableName(symbol: string, problemType: string): string {
+    // Map of Greek symbols to ASCII equivalents
+    const symbolMap: Record<string, string> = {
+      'ξ': 'xi',
+      'Ξ': 'xi',
+      'ρ': 'rho',
+      'θ': 'theta',
+      'Θ': 'theta',
+      'φ': 'phi',
+      'Φ': 'phi',
+      'ψ': 'psi',
+      'Ψ': 'psi',
+      'α': 'alpha',
+      'β': 'beta',
+      'γ': 'gamma',
+      'δ': 'delta',
+      'ε': 'epsilon',
+      'η': 'eta',
+      'λ': 'lambda',
+      'μ': 'mu',
+      'π': 'pi',
+      'σ': 'sigma',
+      'τ': 'tau',
+      'ω': 'omega',
+    };
+
+    // Normalize the symbol (remove subscripts/superscripts)
+    const normalizedSymbol = symbol.trim();
+    
+    // Problem-specific mappings (these take precedence)
+    if (problemType === 'lane-emden' || problemType === 'lane_emden') {
+      // Lane-Emden always uses 'xi' for the radial coordinate
+      return 'xi';
+    }
+    
+    if (problemType === 'poisson-gravity' || problemType === 'poisson_gravity' || problemType.startsWith('poisson')) {
+      // Poisson gravity problems use 'r' for radial coordinate
+      return 'r';
+    }
+
+    // Check if it's a Greek letter
+    if (symbolMap[normalizedSymbol]) {
+      return symbolMap[normalizedSymbol];
+    }
+
+    // Default: return lowercase ASCII version of the symbol
+    return normalizedSymbol.toLowerCase();
+  }
+
   async runPrediction(): Promise<void> {
     const model = this.model();
     if (!model) return;
@@ -570,16 +623,38 @@ export class InferenceExplorerComponent implements OnInit {
     const modelAny = model as unknown as Record<string, unknown>;
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
     const variables = inputDomain?.variables;
-    const inputVarName = variables?.[0]?.name || variables?.[0]?.symbol || 'x';
+    
+    if (!variables || variables.length === 0) {
+      console.error('No input variables found in model definition');
+      return;
+    }
 
-    console.log('Running prediction with input variable:', inputVarName, 'model:', model);
+    // Use the 'name' field directly from the API response - it contains the correct variable name
+    // The API returns input_variables with 'name' field set to the expected variable name (e.g., 'xi' for Lane-Emden)
+    const firstVariable = variables[0];
+    const inputVarName = firstVariable.name || firstVariable.symbol || 'x';
+
+    console.log('Running prediction with input variable:', inputVarName, 'problemType:', model.problemType, 'variables:', variables);
 
     try {
+      // Build inputs object - for 1D problems use first variable, for 2D handle both
+      const inputs: Record<string, any> = {};
+      
+      if (variables.length === 1) {
+        // 1D problem - single input variable
+        inputs[inputVarName] = this.inferenceService.buildRangeInputs(range.min, range.max, range.steps);
+      } else {
+        // 2D problem - multiple input variables (e.g., Poisson with x and y)
+        variables.forEach((variable, index) => {
+          const varName = variable.name || variable.symbol || (index === 0 ? 'x' : 'y');
+          // For 2D, use the same range for both dimensions (could be enhanced later)
+          inputs[varName] = this.inferenceService.buildRangeInputs(range.min, range.max, range.steps);
+        });
+      }
+
       const result = await this.inferenceService.predict({
         modelId: model.id,
-        inputs: {
-          [inputVarName]: this.inferenceService.buildRangeInputs(range.min, range.max, range.steps),
-        },
+        inputs,
         parameters: params,
       });
       this.predictionResult.set(result);
