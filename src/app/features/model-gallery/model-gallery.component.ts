@@ -202,7 +202,7 @@ import { ScientificNotationPipe } from '../../shared/pipes';
                   <i class="pi pi-sync"></i>
                 </span>
                 <div class="metric-content">
-                  <span class="metric-value">{{ formatNumber(selectedModel()!.metrics?.epochs) }}</span>
+                  <span class="metric-value">{{ formatNumber(selectedModel()!.metrics.epochs) }}</span>
                   <span class="metric-label">Epochs</span>
                 </div>
               </div>

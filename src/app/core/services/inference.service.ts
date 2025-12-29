@@ -1,13 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
-import { MockDataService } from './mock-data.service';
 import { PredictRequest, PredictionResult, RangeSpec } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class InferenceService {
   private api = inject(ApiService);
-  private mockData = inject(MockDataService);
 
   // Private writable signals
   private _loading = signal(false);
@@ -34,28 +32,9 @@ export class InferenceService {
       this._lastResult.set(result);
       return result;
     } catch (err) {
-      // Use mock prediction when API is unavailable
-      console.info('Using mock prediction');
-      
-      const inputSpec = request.inputs?.['x'] as RangeSpec | number[];
-      let range: { min: number; max: number; steps: number };
-      
-      if (Array.isArray(inputSpec)) {
-        range = { min: inputSpec[0], max: inputSpec[inputSpec.length - 1], steps: inputSpec.length };
-      } else if (inputSpec && typeof inputSpec === 'object') {
-        range = { min: inputSpec.min, max: inputSpec.max, steps: inputSpec.steps };
-      } else {
-        range = { min: 0, max: 10, steps: 100 };
-      }
-      
-      const result = this.mockData.generatePrediction(
-        request.modelId,
-        range,
-        request.parameters || {}
-      );
-      
-      this._lastResult.set(result);
-      return result;
+      const errorMessage = err instanceof Error ? err.message : 'Prediction failed';
+      this._error.set(errorMessage);
+      throw err;
     } finally {
       this._loading.set(false);
     }
