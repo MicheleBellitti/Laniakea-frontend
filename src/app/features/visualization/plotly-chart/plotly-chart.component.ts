@@ -17,7 +17,7 @@ export interface PlotlyData {
   x: number[];
   y: number[];
   z?: number[][] | number[];
-  type: string;
+  type: 'scatter' | 'scatter3d' | 'surface' | 'heatmap' | 'contour' | 'bar' | 'box' | 'histogram' | 'line' | string;
   mode?: string;
   name?: string;
   line?: {
@@ -154,8 +154,8 @@ export class PlotlyChartComponent implements AfterViewInit, OnChanges, OnDestroy
     const Plotly = await import('plotly.js-dist-min');
     await Plotly.newPlot(
       this.container.nativeElement,
-      this.data,
-      this.mergeLayout(),
+      this.data as any,
+      this.mergeLayout() as any,
       this.config
     );
     this.plotInitialized = true;
@@ -165,8 +165,8 @@ export class PlotlyChartComponent implements AfterViewInit, OnChanges, OnDestroy
     const Plotly = await import('plotly.js-dist-min');
     await Plotly.react(
       this.container.nativeElement,
-      this.data,
-      this.mergeLayout()
+      this.data as any,
+      this.mergeLayout() as any
     );
   }
 
@@ -191,9 +191,12 @@ export class PlotlyChartComponent implements AfterViewInit, OnChanges, OnDestroy
 
   async downloadImage(format: 'png' | 'svg' = 'png'): Promise<void> {
     const Plotly = await import('plotly.js-dist-min');
-    await Plotly.downloadImage(this.container.nativeElement, {
+    const element = this.container.nativeElement;
+    await Plotly.downloadImage(element, {
       format,
       filename: 'laniakea-plot',
+      width: element.clientWidth || 800,
+      height: element.clientHeight || 600,
     });
   }
 }

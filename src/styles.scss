@@ -1,8 +1,14 @@
-// Import custom styles using @use
+// ============================================
+// LANIAKEA - GLOBAL STYLES
+// ============================================
+
 @use 'styles/variables' as *;
 @use 'styles/primeng-theme';
 
-// Reset and base styles
+// === IMPORTS ===
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+// === RESET ===
 *,
 *::before,
 *::after {
@@ -14,209 +20,412 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-}
-
-body {
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  line-height: 1.5;
-  color: $text-primary;
-  background: $surface-dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Typography
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  line-height: 1.25;
-  color: $text-primary;
+body {
+  font-family: $font-body;
+  font-size: $text-base;
+  line-height: 1.6;
+  color: $sunlight;
+  background: $void-black;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-h1 { font-size: $font-size-4xl; }
-h2 { font-size: $font-size-3xl; }
-h3 { font-size: $font-size-2xl; }
-h4 { font-size: $font-size-xl; }
-h5 { font-size: $font-size-lg; }
-h6 { font-size: $font-size-base; }
+// === TYPOGRAPHY ===
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-display;
+  font-weight: 600;
+  line-height: 1.2;
+  color: $sunlight;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: $text-5xl; }
+h2 { font-size: $text-4xl; }
+h3 { font-size: $text-3xl; }
+h4 { font-size: $text-2xl; }
+h5 { font-size: $text-xl; }
+h6 { font-size: $text-lg; }
 
 p {
-  color: $text-secondary;
-  margin-bottom: $spacing-md;
+  color: $starlight;
+  margin-bottom: $space-4;
 }
 
 a {
-  color: $primary-color;
+  color: $cosmic-violet;
   text-decoration: none;
-  transition: color $transition-fast;
+  transition: color $duration-fast $ease-smooth;
 
   &:hover {
-    color: lighten($primary-color, 10%);
+    color: $nebula-purple;
   }
 }
 
 code, pre {
-  font-family: $font-family-mono;
+  font-family: $font-mono;
 }
 
 code {
-  background: $surface-light;
-  padding: 2px 6px;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
+  background: rgba($cosmic-violet, 0.15);
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+  font-size: $text-sm;
+  color: $nebula-purple;
 }
 
 pre {
-  background: $surface-color;
-  padding: $spacing-md;
-  border-radius: $border-radius-md;
+  background: $nebula-gray;
+  padding: $space-4;
+  border-radius: $radius-md;
   overflow-x: auto;
+  border: 1px solid $asteroid-gray;
 }
 
-// Utility classes
-.container {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 $spacing-md;
-
-  @media (min-width: $breakpoint-lg) {
-    padding: 0 $spacing-lg;
-  }
-}
-
-.text-primary { color: $text-primary; }
-.text-secondary { color: $text-secondary; }
-.text-accent { color: $primary-color; }
-
-.bg-surface { background: $surface-color; }
-.bg-surface-dark { background: $surface-dark; }
-.bg-surface-light { background: $surface-light; }
-
-.rounded-sm { border-radius: $border-radius-sm; }
-.rounded-md { border-radius: $border-radius-md; }
-.rounded-lg { border-radius: $border-radius-lg; }
-.rounded-xl { border-radius: $border-radius-xl; }
-.rounded-full { border-radius: $border-radius-full; }
-
-.shadow-sm { box-shadow: $shadow-sm; }
-.shadow-md { box-shadow: $shadow-md; }
-.shadow-lg { box-shadow: $shadow-lg; }
-.shadow-glow { box-shadow: $shadow-glow; }
-
-// Category badge colors
-.badge-stellar {
-  background: rgba($accent-stellar, 0.2);
-  color: $accent-stellar;
-}
-
-.badge-gravity {
-  background: rgba($accent-gravity, 0.2);
-  color: $accent-gravity;
-}
-
-.badge-quantum {
-  background: rgba($accent-quantum, 0.2);
-  color: $accent-quantum;
-}
-
-.badge-thermodynamics {
-  background: rgba($accent-thermo, 0.2);
-  color: $accent-thermo;
-}
-
-// Animation utilities
-.fade-in {
-  animation: fadeIn $transition-slow forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in {
-  animation: slideIn $transition-slow forwards;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-// Scrollbar styling
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: $surface-dark;
-}
-
-::-webkit-scrollbar-thumb {
-  background: $surface-light;
-  border-radius: $border-radius-full;
-
-  &:hover {
-    background: lighten($surface-light, 10%);
-  }
-}
-
-// Selection styling
+// === SELECTION ===
 ::selection {
-  background: rgba($primary-color, 0.3);
-  color: $text-primary;
+  background: rgba($cosmic-violet, 0.4);
+  color: $sunlight;
 }
 
-// Focus visible styling
+// === FOCUS ===
 :focus-visible {
-  outline: 2px solid $primary-color;
+  outline: 2px solid $cosmic-violet;
   outline-offset: 2px;
 }
 
-// Loading state
+// === SCROLLBAR ===
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: $space-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $asteroid-gray;
+  border-radius: $radius-full;
+  border: 2px solid $space-dark;
+
+  &:hover {
+    background: $dust-gray;
+  }
+}
+
+// Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: $asteroid-gray $space-dark;
+}
+
+// === UTILITY CLASSES ===
+
+// Text
+.text-primary { color: $sunlight; }
+.text-secondary { color: $starlight; }
+.text-muted { color: $dust-gray; }
+.text-accent { color: $cosmic-violet; }
+.text-gradient {
+  background: $gradient-cosmic;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Backgrounds
+.bg-void { background: $void-black; }
+.bg-space { background: $space-dark; }
+.bg-nebula { background: $nebula-gray; }
+.bg-gradient { background: $gradient-cosmic; }
+.bg-glass {
+  background: rgba($nebula-gray, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba($asteroid-gray, 0.5);
+}
+
+// Borders
+.border-subtle { border: 1px solid $asteroid-gray; }
+.border-glow { border: 1px solid rgba($cosmic-violet, 0.5); }
+
+// Shadows
+.shadow-glow { box-shadow: $glow-violet; }
+.shadow-lg { box-shadow: $shadow-lg; }
+
+// Border radius
+.rounded-sm { border-radius: $radius-sm; }
+.rounded-md { border-radius: $radius-md; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-xl { border-radius: $radius-xl; }
+.rounded-full { border-radius: $radius-full; }
+
+// === ANIMATIONS ===
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: $glow-violet;
+  }
+  50% {
+    box-shadow: $glow-blue;
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Animation classes
+.animate-fade-in {
+  animation: fadeIn $duration-slow $ease-smooth forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp $duration-slow $ease-smooth forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft $duration-slow $ease-smooth forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight $duration-slow $ease-smooth forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+// Stagger animation delays
+@for $i from 1 through 10 {
+  .delay-#{$i} {
+    animation-delay: #{$i * 100}ms;
+  }
+}
+
+// === GLASS CARD ===
+.glass-card {
+  background: rgba($nebula-gray, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba($asteroid-gray, 0.5);
+  border-radius: $radius-lg;
+  transition: all $duration-base $ease-smooth;
+
+  &:hover {
+    border-color: rgba($cosmic-violet, 0.5);
+    box-shadow: $glow-violet;
+    transform: translateY(-4px);
+  }
+}
+
+// === CATEGORY BADGES ===
+.badge-stellar {
+  background: rgba($category-stellar, 0.2);
+  color: $category-stellar;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-gravity {
+  background: rgba($category-gravity, 0.2);
+  color: $category-gravity;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-quantum {
+  background: rgba($category-quantum, 0.2);
+  color: $category-quantum;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-thermo {
+  background: rgba($category-thermo, 0.2);
+  color: $category-thermo;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+// === KATEX STYLING ===
+.katex {
+  font-size: 1.1em;
+  color: $sunlight;
+}
+
+.katex-display {
+  margin: $space-4 0;
+  padding: $space-4;
+  background: rgba($void-black, 0.5);
+  border-radius: $radius-md;
+  overflow-x: auto;
+}
+
+// === PLOTLY ADJUSTMENTS ===
+.js-plotly-plot {
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+// === LOADING OVERLAY ===
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba($surface-dark, 0.8);
+  background: rgba($void-black, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: $z-modal;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
 }
 
-// KaTeX styling adjustments
-.katex {
-  font-size: 1.1em;
-  color: $text-primary;
-}
-
-.katex-display {
-  margin: $spacing-md 0;
-  padding: $spacing-md;
-  background: $surface-color;
-  border-radius: $border-radius-md;
-  overflow-x: auto;
-}
-
-// Plotly styling adjustments
-.js-plotly-plot {
-  border-radius: $border-radius-md;
-  overflow: hidden;
-}
-
-// Three.js container
-.three-container {
+// === CONTAINER ===
+.container {
   width: 100%;
-  height: 100%;
-  border-radius: $border-radius-md;
-  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 $space-6;
 
-  canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
+  @media (max-width: $screen-md) {
+    padding: 0 $space-4;
   }
 }
+
+// === COSMIC BACKGROUND ===
+.cosmic-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba($cosmic-violet, 0.15) 0%, transparent 70%);
+    top: -200px;
+    right: -200px;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba($stellar-blue, 0.1) 0%, transparent 70%);
+    bottom: -100px;
+    left: -100px;
+    animation: float 10s ease-in-out infinite reverse;
+  }
+}
+

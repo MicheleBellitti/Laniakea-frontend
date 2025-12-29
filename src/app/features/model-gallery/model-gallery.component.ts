@@ -8,7 +8,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { ModelsService, PhysicsService } from '../../core/services';
-import { ModelSummary, ModelDetail } from '../../core/models';
+import { ModelSummary } from '../../core/models';
 import { ModelCardComponent } from './model-card/model-card.component';
 import { ErrorDisplayComponent, LoadingSpinnerComponent, MetricCardComponent } from '../../shared/components';
 import { ScientificNotationPipe } from '../../shared/pipes';
@@ -32,66 +32,88 @@ import { ScientificNotationPipe } from '../../shared/pipes';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="gallery-container">
-      <header class="page-header">
-        <div class="header-content">
-          <h1>Model Gallery</h1>
+    <div class="gallery-page">
+      <!-- Header -->
+      <header class="page-header animate-fade-in">
+        <div class="header-top">
           @if (problemType()) {
-            <p>Models for <strong>{{ getProblemName() }}</strong></p>
-          } @else {
-            <p>Explore pre-trained neural network models</p>
+            <button class="back-btn" (click)="goToProblems()">
+              <i class="pi pi-arrow-left"></i>
+              <span>All Problems</span>
+            </button>
           }
         </div>
-        @if (problemType()) {
-          <p-button
-            label="All Problems"
-            icon="pi pi-arrow-left"
-            styleClass="p-button-text"
-            (onClick)="goToProblems()"
-          />
-        }
+
+        <div class="header-content">
+          <span class="header-badge">
+            <i class="pi pi-box"></i>
+            Neural Network Models
+          </span>
+          <h1>
+            @if (problemType()) {
+              {{ getProblemName() }} Models
+            } @else {
+              Model Gallery
+            }
+          </h1>
+          <p>Select a pre-trained model to explore and run predictions</p>
+        </div>
       </header>
 
       <!-- Filters -->
-      <div class="filters-section">
-        <div class="search-box">
-          <span class="p-input-icon-left">
-            <i class="pi pi-search"></i>
-            <input
-              type="text"
-              pInputText
-              placeholder="Search models..."
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="onSearchChange($event)"
-            />
-          </span>
+      <div class="filters-section animate-fade-in delay-1">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            placeholder="Search models..."
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange($event)"
+            class="search-input"
+          />
         </div>
 
-        <p-dropdown
-          [options]="sortOptions"
-          [(ngModel)]="selectedSort"
-          optionLabel="label"
-          optionValue="value"
-          (ngModelChange)="onSortChange($event)"
-        />
+        <div class="sort-wrapper">
+          <p-dropdown
+            [options]="sortOptions"
+            [(ngModel)]="selectedSort"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="onSortChange($event)"
+            styleClass="sort-dropdown"
+          />
+        </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-bar">
-        <span class="stat">
-          <strong>{{ filteredModels().length }}</strong> models
-        </span>
-        <span class="stat">
-          <strong>{{ baselineCount() }}</strong> baseline
-        </span>
+      <!-- Stats Bar -->
+      <div class="stats-bar animate-fade-in delay-2">
+        <div class="stat-item">
+          <span class="stat-icon">
+            <i class="pi pi-box"></i>
+          </span>
+          <span class="stat-content">
+            <span class="stat-value">{{ filteredModels().length }}</span>
+            <span class="stat-label">Models</span>
+          </span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon baseline">
+            <i class="pi pi-star-fill"></i>
+          </span>
+          <span class="stat-content">
+            <span class="stat-value">{{ baselineCount() }}</span>
+            <span class="stat-label">Baseline</span>
+          </span>
+        </div>
       </div>
 
       <!-- Content -->
       @if (modelsService.loading()) {
         <div class="models-grid">
           @for (i of [1, 2, 3, 4]; track i) {
-            <div class="skeleton-card">
-              <p-skeleton height="280px" />
+            <div class="skeleton-card animate-fade-in" [style.animation-delay.ms]="i * 100">
+              <p-skeleton height="300px" styleClass="skeleton-content" />
             </div>
           }
         </div>
@@ -104,18 +126,27 @@ import { ScientificNotationPipe } from '../../shared/pipes';
         />
       } @else {
         <div class="models-grid">
-          @for (model of filteredModels(); track model.id) {
+          @for (model of filteredModels(); track model.id; let i = $index) {
             <app-model-card
               [model]="model"
               (select)="onSelectModel($event)"
               (viewDetails)="onViewDetails($event)"
-              class="fade-in"
+              class="animate-fade-in"
+              [style.animation-delay.ms]="i * 100"
             />
           } @empty {
             <div class="empty-state">
-              <i class="pi pi-box"></i>
+              <div class="empty-icon">
+                <i class="pi pi-box"></i>
+              </div>
               <h3>No models found</h3>
-              <p>Try adjusting your search criteria</p>
+              <p>
+                @if (problemType()) {
+                  No models available for this problem yet.
+                } @else {
+                  Try adjusting your search criteria.
+                }
+              </p>
             </div>
           }
         </div>
@@ -127,49 +158,62 @@ import { ScientificNotationPipe } from '../../shared/pipes';
       [(visible)]="detailsDialogVisible"
       [header]="selectedModel()?.name || 'Model Details'"
       [modal]="true"
-      [style]="{ width: '600px' }"
-      styleClass="model-details-dialog"
+      [style]="{ width: '550px', maxWidth: '95vw' }"
+      [draggable]="false"
+      [resizable]="false"
+      styleClass="model-dialog"
     >
       @if (selectedModel()) {
-        <div class="details-content">
+        <div class="dialog-content">
           <p class="model-description">{{ selectedModel()!.description }}</p>
 
-          <div class="details-section">
+          <div class="metrics-section">
             <h4>Training Metrics</h4>
             <div class="metrics-grid">
-              <app-metric-card
-                label="Total Loss"
-                [value]="selectedModel()!.metrics.totalLoss"
-                icon="pi pi-chart-line"
-                [scientificNotation]="true"
-              />
-              <app-metric-card
-                label="Physics Loss"
-                [value]="selectedModel()!.metrics.physicsLoss"
-                icon="pi pi-bolt"
-                iconColor="#f59e0b"
-                [scientificNotation]="true"
-              />
-              <app-metric-card
-                label="Data Loss"
-                [value]="selectedModel()!.metrics.dataLoss"
-                icon="pi pi-database"
-                iconColor="#3b82f6"
-                [scientificNotation]="true"
-              />
-              <app-metric-card
-                label="Epochs"
-                [value]="selectedModel()!.metrics.epochs"
-                icon="pi pi-refresh"
-                iconColor="#8b5cf6"
-              />
+              <div class="metric-item">
+                <span class="metric-icon total">
+                  <i class="pi pi-chart-line"></i>
+                </span>
+                <div class="metric-content">
+                  <span class="metric-value">{{ selectedModel()!.metrics.totalLoss | scientificNotation }}</span>
+                  <span class="metric-label">Total Loss</span>
+                </div>
+              </div>
+              <div class="metric-item">
+                <span class="metric-icon physics">
+                  <i class="pi pi-bolt"></i>
+                </span>
+                <div class="metric-content">
+                  <span class="metric-value">{{ selectedModel()!.metrics.physicsLoss | scientificNotation }}</span>
+                  <span class="metric-label">Physics Loss</span>
+                </div>
+              </div>
+              <div class="metric-item">
+                <span class="metric-icon data">
+                  <i class="pi pi-database"></i>
+                </span>
+                <div class="metric-content">
+                  <span class="metric-value">{{ selectedModel()!.metrics.dataLoss | scientificNotation }}</span>
+                  <span class="metric-label">Data Loss</span>
+                </div>
+              </div>
+              <div class="metric-item">
+                <span class="metric-icon epochs">
+                  <i class="pi pi-sync"></i>
+                </span>
+                <div class="metric-content">
+                  <span class="metric-value">{{ formatNumber(selectedModel()!.metrics.epochs) }}</span>
+                  <span class="metric-label">Epochs</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="details-actions">
+          <div class="dialog-actions">
             <p-button
               label="Use This Model"
               icon="pi pi-play"
+              styleClass="p-button-primary use-model-btn"
               (onClick)="onSelectModel(selectedModel()!)"
             />
           </div>
@@ -178,137 +222,270 @@ import { ScientificNotationPipe } from '../../shared/pipes';
     </p-dialog>
   `,
   styles: [`
-    .gallery-container {
+    .gallery-page {
+      min-height: 100vh;
       padding: 2rem;
       max-width: 1400px;
       margin: 0 auto;
     }
 
+    // ============================================
+    // HEADER
+    // ============================================
     .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
+      padding: 2rem 0 3rem;
+    }
 
-      @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
+    .header-top {
+      margin-bottom: 1.5rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #7c3aed;
+        color: #a78bfa;
       }
     }
 
     .header-content {
-      h1 {
-        margin: 0 0 0.5rem;
-        font-size: 2rem;
-      }
-
-      p {
-        margin: 0;
-        color: var(--text-color-secondary);
-
-        strong {
-          color: var(--primary-color);
-        }
-      }
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.2);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      color: #a78bfa;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      color: #64748b;
+      font-size: 1.125rem;
+    }
+
+    // ============================================
+    // FILTERS
+    // ============================================
     .filters-section {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
       gap: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
 
-      @media (max-width: 768px) {
+      @media (max-width: 640px) {
         flex-direction: column;
-        align-items: stretch;
       }
     }
 
-    .search-box {
+    .search-wrapper {
+      position: relative;
       flex: 1;
       max-width: 400px;
 
-      input {
-        width: 100%;
-      }
-
-      @media (max-width: 768px) {
+      @media (max-width: 640px) {
         max-width: 100%;
       }
     }
 
-    .stats-bar {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      padding: 0.75rem 1rem;
-      background: var(--surface-section);
-      border-radius: 8px;
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
     }
 
-    .stat {
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
+    .search-input {
+      width: 100%;
+      padding: 0.875rem 1rem 0.875rem 2.75rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      color: #f1f5f9;
+      font-size: 1rem;
+      transition: all 0.2s ease;
 
-      strong {
-        color: var(--text-color);
+      &::placeholder {
+        color: #64748b;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
       }
     }
 
+    :host ::ng-deep .sort-dropdown {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      border-radius: 12px;
+
+      .p-dropdown-label {
+        padding: 0.875rem 1rem;
+      }
+    }
+
+    // ============================================
+    // STATS BAR
+    // ============================================
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: rgba(30, 41, 59, 0.5);
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(124, 58, 237, 0.1);
+      border-radius: 10px;
+      color: #a78bfa;
+
+      &.baseline {
+        background: rgba(245, 158, 11, 0.1);
+        color: #fbbf24;
+      }
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    // ============================================
+    // MODELS GRID
+    // ============================================
     .models-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.5rem;
     }
 
     .skeleton-card {
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
     }
 
+    // ============================================
+    // EMPTY STATE
+    // ============================================
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
       padding: 4rem 2rem;
-      color: var(--text-color-secondary);
 
-      i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
+      .empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: rgba(30, 41, 59, 0.6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+          font-size: 2rem;
+          color: #475569;
+        }
       }
 
       h3 {
-        margin: 0 0 0.5rem;
-        color: var(--text-color);
+        font-size: 1.25rem;
+        color: #f1f5f9;
+        margin-bottom: 0.5rem;
       }
 
       p {
-        margin: 0;
+        color: #64748b;
       }
     }
 
-    // Dialog styles
-    .details-content {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
+    // ============================================
+    // DIALOG
+    // ============================================
+    :host ::ng-deep .model-dialog {
+      .p-dialog-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+      }
+
+      .p-dialog-content {
+        background: #1e293b;
+        padding: 1.5rem;
+      }
     }
 
-    .model-description {
-      color: var(--text-color-secondary);
-      line-height: 1.6;
-      margin: 0;
+    .dialog-content {
+      .model-description {
+        color: #94a3b8;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
     }
 
-    .details-section {
+    .metrics-section {
       h4 {
-        margin: 0 0 1rem;
-        font-size: 1rem;
-        color: var(--text-color);
+        font-size: 0.875rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
       }
     }
 
@@ -318,11 +495,94 @@ import { ScientificNotationPipe } from '../../shared/pipes';
       gap: 1rem;
     }
 
-    .details-actions {
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+
+      &.total {
+        background: rgba(124, 58, 237, 0.15);
+        color: #a78bfa;
+      }
+
+      &.physics {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+      }
+
+      &.data {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+      }
+
+      &.epochs {
+        background: rgba(6, 182, 212, 0.15);
+        color: #22d3ee;
+      }
+    }
+
+    .metric-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .dialog-actions {
+      margin-top: 1.5rem;
       display: flex;
       justify-content: flex-end;
-      padding-top: 1rem;
-      border-top: 1px solid var(--surface-border);
+    }
+
+    :host ::ng-deep .use-model-btn {
+      padding: 0.75rem 1.5rem;
+    }
+
+    // ============================================
+    // ANIMATIONS
+    // ============================================
+    .animate-fade-in {
+      opacity: 0;
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @for $i from 1 through 5 {
+      .delay-#{$i} {
+        animation-delay: #{$i * 100}ms;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   `]
 })
@@ -353,7 +613,6 @@ export class ModelGalleryComponent implements OnInit {
     let models = [...this.modelsService.models()];
     const search = this.searchSignal().toLowerCase();
 
-    // Filter by search
     if (search) {
       models = models.filter(m =>
         m.name.toLowerCase().includes(search) ||
@@ -361,7 +620,6 @@ export class ModelGalleryComponent implements OnInit {
       );
     }
 
-    // Sort
     switch (this.sortSignal()) {
       case 'loss':
         models.sort((a, b) => a.metrics.totalLoss - b.metrics.totalLoss);
@@ -387,6 +645,7 @@ export class ModelGalleryComponent implements OnInit {
   ngOnInit(): void {
     const problemId = this.route.snapshot.paramMap.get('problemId');
     this.problemType.set(problemId);
+    this.physicsService.loadProblems();
     this.loadModels();
   }
 
@@ -397,7 +656,7 @@ export class ModelGalleryComponent implements OnInit {
 
   getProblemName(): string {
     const problem = this.physicsService.getProblemById(this.problemType() || '');
-    return problem?.name || this.problemType() || '';
+    return problem?.name || this.problemType() || 'All';
   }
 
   onSearchChange(query: string): void {
@@ -420,5 +679,12 @@ export class ModelGalleryComponent implements OnInit {
 
   goToProblems(): void {
     this.router.navigate(['/problems']);
+  }
+
+  formatNumber(num: number): string {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
   }
 }

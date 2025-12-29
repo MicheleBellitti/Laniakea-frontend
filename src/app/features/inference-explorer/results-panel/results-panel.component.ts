@@ -1,39 +1,30 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TagModule } from 'primeng/tag';
-import { SkeletonModule } from 'primeng/skeleton';
 import { PredictionResult } from '../../../core/models';
-import { MetricCardComponent, LoadingSpinnerComponent } from '../../../shared/components';
-import { ScientificNotationPipe } from '../../../shared/pipes';
+import { LoadingSpinnerComponent } from '../../../shared/components';
 
 @Component({
   selector: 'app-results-panel',
   standalone: true,
-  imports: [
-    CommonModule,
-    TagModule,
-    SkeletonModule,
-    MetricCardComponent,
-    LoadingSpinnerComponent,
-    ScientificNotationPipe,
-  ],
+  imports: [CommonModule, LoadingSpinnerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="results-panel">
+      <!-- Header -->
       <div class="panel-header">
-        <h3>
+        <div class="header-title">
           <i class="pi pi-chart-line"></i>
-          Results
-        </h3>
+          <span>Results</span>
+        </div>
         @if (result) {
-          <p-tag
-            value="Ready"
-            severity="success"
-            icon="pi pi-check"
-          />
+          <span class="status-badge ready">
+            <i class="pi pi-check-circle"></i>
+            Ready
+          </span>
         }
       </div>
 
+      <!-- Content -->
       <div class="panel-content">
         @if (loading) {
           <div class="loading-state">
@@ -42,19 +33,24 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
         } @else if (result) {
           <!-- Metrics Bar -->
           <div class="metrics-bar">
-            <app-metric-card
-              label="Computation Time"
-              [value]="result.computationTime"
-              unit="ms"
-              icon="pi pi-clock"
-              iconColor="#10b981"
-            />
-            <app-metric-card
-              label="Output Points"
-              [value]="getOutputSize()"
-              icon="pi pi-table"
-              iconColor="#3b82f6"
-            />
+            <div class="metric-item">
+              <div class="metric-icon time">
+                <i class="pi pi-clock"></i>
+              </div>
+              <div class="metric-info">
+                <span class="metric-value">{{ result.computationTime }}ms</span>
+                <span class="metric-label">Computation Time</span>
+              </div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-icon points">
+                <i class="pi pi-table"></i>
+              </div>
+              <div class="metric-info">
+                <span class="metric-value">{{ getOutputSize() }}</span>
+                <span class="metric-label">Output Points</span>
+              </div>
+            </div>
           </div>
 
           <!-- Chart Container (content projection) -->
@@ -63,25 +59,22 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
           </div>
 
           <!-- Output Summary -->
-          <div class="output-summary">
-            <h4>Output Variables</h4>
-            <div class="output-list">
-              @for (key of getOutputKeys(); track key) {
-                <div class="output-item">
-                  <span class="output-name">{{ key }}</span>
-                  <span class="output-range">
-                    {{ getOutputRange(key) }}
-                  </span>
-                </div>
-              }
+          @if (getOutputKeys().length > 0) {
+            <div class="output-summary">
+              <h4>Output Variables</h4>
+              <div class="output-list">
+                @for (key of getOutputKeys(); track key) {
+                  <div class="output-item">
+                    <span class="output-name">{{ key }}</span>
+                    <span class="output-range">{{ getOutputRange(key) }}</span>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
+          }
         } @else {
-          <div class="empty-state">
-            <i class="pi pi-chart-bar"></i>
-            <h4>No Results Yet</h4>
-            <p>Configure parameters and run a prediction to see results</p>
-          </div>
+          <!-- Empty state - content projection for custom empty state -->
+          <ng-content></ng-content>
         }
       </div>
     </div>
@@ -91,31 +84,59 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: var(--surface-section);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      border-radius: 20px;
       overflow: hidden;
     }
 
+    // ============================================
+    // HEADER
+    // ============================================
     .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid var(--surface-border);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    }
 
-      h3 {
-        margin: 0;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
 
-        i {
-          color: var(--primary-color);
-        }
+      i {
+        color: #7c3aed;
       }
     }
 
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      &.ready {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+      }
+
+      i {
+        font-size: 0.75rem;
+      }
+    }
+
+    // ============================================
+    // CONTENT
+    // ============================================
     .panel-content {
       flex: 1;
       display: flex;
@@ -128,40 +149,93 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 2rem;
     }
 
+    // ============================================
+    // METRICS BAR
+    // ============================================
     .metrics-bar {
       display: flex;
       gap: 1rem;
-      padding: 1rem;
-      border-bottom: 1px solid var(--surface-border);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.3);
 
-      @media (max-width: 768px) {
+      @media (max-width: 640px) {
         flex-direction: column;
       }
+    }
 
-      app-metric-card {
-        flex: 1;
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      padding: 0.875rem 1rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+    }
+
+    .metric-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 1.25rem;
+
+      &.time {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+      }
+
+      &.points {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
       }
     }
 
-    .chart-container {
-      flex: 1;
-      min-height: 300px;
-      padding: 1rem;
-      overflow: hidden;
+    .metric-info {
+      display: flex;
+      flex-direction: column;
     }
 
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    // ============================================
+    // CHART CONTAINER
+    // ============================================
+    .chart-container {
+      flex: 1;
+      min-height: 350px;
+      padding: 1rem 1.5rem;
+    }
+
+    // ============================================
+    // OUTPUT SUMMARY
+    // ============================================
     .output-summary {
-      padding: 1rem;
-      border-top: 1px solid var(--surface-border);
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(51, 65, 85, 0.3);
 
       h4 {
-        margin: 0 0 0.75rem;
-        font-size: 0.875rem;
-        color: var(--text-color-secondary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        margin: 0 0 0.75rem;
       }
     }
 
@@ -172,50 +246,25 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
     }
 
     .output-item {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--surface-overlay);
-      border-radius: 6px;
-      font-size: 0.875rem;
+      padding: 0.5rem 0.875rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 8px;
     }
 
     .output-name {
-      color: var(--primary-color);
       font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #a78bfa;
     }
 
     .output-range {
-      color: var(--text-color-secondary);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
-    }
-
-    .empty-state {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-color-secondary);
-      padding: 2rem;
-
-      i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-      }
-
-      h4 {
-        margin: 0 0 0.5rem;
-        color: var(--text-color);
-      }
-
-      p {
-        margin: 0;
-        text-align: center;
-      }
+      color: #64748b;
     }
   `]
 })

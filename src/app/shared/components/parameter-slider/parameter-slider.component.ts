@@ -4,17 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { SliderModule } from 'primeng/slider';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
-import { SliderChangeEvent } from 'primeng/slider';
-import { InputNumberInputEvent } from 'primeng/inputnumber';
 
 export interface ParameterSpec {
   name: string;
   symbol: string;
-  description: string;
+  description?: string;
   min: number;
   max: number;
   default: number;
-  step: number;
+  step?: number;
   unit?: string;
 }
 
@@ -28,33 +26,35 @@ export interface ParameterSpec {
       <div class="parameter-header">
         <label class="parameter-label" [pTooltip]="parameter.description" tooltipPosition="top">
           <span class="parameter-name">{{ parameter.name }}</span>
-          <span class="parameter-symbol">({{ parameter.symbol }})</span>
+          <span class="parameter-symbol">{{ parameter.symbol }}</span>
         </label>
         <div class="parameter-value">
-          <p-inputNumber
+          <input
+            type="number"
+            class="value-input"
             [(ngModel)]="value"
             [min]="parameter.min"
             [max]="parameter.max"
-            [step]="parameter.step"
-            [minFractionDigits]="getDecimalPlaces()"
-            [maxFractionDigits]="getDecimalPlaces()"
-            [showButtons]="false"
-            inputStyleClass="value-input"
-            (onInput)="onInputChange($event)"
+            [step]="parameter.step || 0.1"
+            (ngModelChange)="onInputChange($event)"
           />
           @if (parameter.unit) {
             <span class="parameter-unit">{{ parameter.unit }}</span>
           }
         </div>
       </div>
-      <p-slider
-        [(ngModel)]="value"
-        [min]="parameter.min"
-        [max]="parameter.max"
-        [step]="parameter.step"
-        (onChange)="onSliderChange($event)"
-        styleClass="custom-slider"
-      />
+
+      <div class="slider-container">
+        <p-slider
+          [(ngModel)]="value"
+          [min]="parameter.min"
+          [max]="parameter.max"
+          [step]="parameter.step || 0.01"
+          (onChange)="onSliderChange($event)"
+          styleClass="custom-slider"
+        />
+      </div>
+
       <div class="parameter-range">
         <span>{{ parameter.min }}</span>
         <span>{{ parameter.max }}</span>
@@ -63,67 +63,123 @@ export interface ParameterSpec {
   `,
   styles: [`
     .parameter-slider {
-      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(51, 65, 85, 0.3);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: rgba(124, 58, 237, 0.3);
+        background: rgba(15, 23, 42, 0.6);
+      }
     }
 
     .parameter-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     .parameter-label {
       cursor: help;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
     }
 
     .parameter-name {
       font-weight: 500;
-      color: var(--text-color);
+      color: #f1f5f9;
+      font-size: 0.9rem;
     }
 
     .parameter-symbol {
-      color: var(--primary-color);
       font-family: 'JetBrains Mono', monospace;
-      margin-left: 0.25rem;
+      color: #a78bfa;
+      font-size: 0.8rem;
     }
 
     .parameter-value {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.375rem;
     }
 
-    :host ::ng-deep .value-input {
+    .value-input {
       width: 80px;
-      text-align: right;
+      padding: 0.5rem 0.625rem;
+      background: rgba(3, 7, 18, 0.6);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
       font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      text-align: right;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+      }
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        opacity: 1;
+      }
     }
 
     .parameter-unit {
-      color: var(--text-color-secondary);
-      font-size: 0.875rem;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .slider-container {
+      padding: 0.25rem 0;
+    }
+
+    :host ::ng-deep .custom-slider {
+      width: 100%;
+      background: #334155;
+      height: 6px;
+      border-radius: 9999px;
+
+      .p-slider-range {
+        background: linear-gradient(90deg, #7c3aed, #a855f7);
+        border-radius: 9999px;
+      }
+
+      .p-slider-handle {
+        width: 20px;
+        height: 20px;
+        background: #f1f5f9;
+        border: 3px solid #7c3aed;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+        margin-top: -7px;
+        margin-left: -10px;
+        transition: all 0.15s ease;
+
+        &:hover {
+          transform: scale(1.15);
+          box-shadow: 0 0 15px rgba(124, 58, 237, 0.6);
+        }
+
+        &:focus {
+          box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3), 0 0 15px rgba(124, 58, 237, 0.6);
+        }
+      }
     }
 
     .parameter-range {
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--text-color-secondary);
-      margin-top: 0.25rem;
-    }
-
-    :host ::ng-deep .custom-slider {
-      width: 100%;
-
-      .p-slider-range {
-        background: var(--primary-color);
-      }
-
-      .p-slider-handle {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-      }
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #64748b;
     }
   `]
 })
@@ -132,20 +188,13 @@ export class ParameterSliderComponent {
   @Input() value: number = 0;
   @Output() valueChange = new EventEmitter<number>();
 
-  getDecimalPlaces(): number {
-    const stepStr = this.parameter.step.toString();
-    const decimalIndex = stepStr.indexOf('.');
-    return decimalIndex === -1 ? 0 : stepStr.length - decimalIndex - 1;
-  }
-
-  onSliderChange(event: SliderChangeEvent): void {
+  onSliderChange(event: any): void {
     if (event.value !== undefined && typeof event.value === 'number') {
       this.valueChange.emit(event.value);
     }
   }
 
-  onInputChange(event: InputNumberInputEvent): void {
-    const val = event.value;
+  onInputChange(val: number): void {
     if (val !== null && val !== undefined && typeof val === 'number') {
       const clampedValue = Math.min(
         Math.max(val, this.parameter.min),

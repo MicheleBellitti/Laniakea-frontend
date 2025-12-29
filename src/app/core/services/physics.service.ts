@@ -1,11 +1,13 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
+import { MockDataService } from './mock-data.service';
 import { PhysicsMetadata, PhysicsProblemsResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class PhysicsService {
   private api = inject(ApiService);
+  private mockData = inject(MockDataService);
 
   // Private writable signals
   private _problems = signal<PhysicsMetadata[]>([]);
@@ -45,7 +47,9 @@ export class PhysicsService {
       );
       this._problems.set(response.problems);
     } catch (err) {
-      this._error.set(err instanceof Error ? err.message : 'Failed to load physics problems');
+      // Use mock data when API is unavailable
+      console.info('Using mock data for physics problems');
+      this._problems.set(this.mockData.getProblems());
     } finally {
       this._loading.set(false);
     }

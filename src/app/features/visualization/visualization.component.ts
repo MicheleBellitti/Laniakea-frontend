@@ -79,7 +79,7 @@ export type VisualizationType = '1d' | '2d-heatmap' | '2d-contour' | '3d';
       height: 100%;
       background: var(--surface-section);
       border-radius: 12px;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .visualization-header {

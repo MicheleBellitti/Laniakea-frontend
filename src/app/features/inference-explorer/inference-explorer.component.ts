@@ -10,15 +10,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { MenuItem } from 'primeng/api';
 import { ModelsService, InferenceService, PhysicsService } from '../../core/services';
 import { PredictionResult, ModelDetail } from '../../core/models';
 import { ParameterPanelComponent, ParameterValues, RangeConfig } from './parameter-panel/parameter-panel.component';
 import { ResultsPanelComponent } from './results-panel/results-panel.component';
 import { PlotlyChartComponent, PlotlyData, PlotlyLayout } from '../visualization/plotly-chart/plotly-chart.component';
-import { ThreeSceneComponent, SurfaceData } from '../visualization/three-scene/three-scene.component';
-import { EquationDisplayComponent, ErrorDisplayComponent, LoadingSpinnerComponent } from '../../shared/components';
+import { EquationDisplayComponent, LoadingSpinnerComponent } from '../../shared/components';
 import { ParameterSpec } from '../../shared/components/parameter-slider/parameter-slider.component';
 
 @Component({
@@ -27,23 +24,24 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
   imports: [
     CommonModule,
     ButtonModule,
-    BreadcrumbModule,
     ParameterPanelComponent,
     ResultsPanelComponent,
     PlotlyChartComponent,
-    ThreeSceneComponent,
     EquationDisplayComponent,
-    ErrorDisplayComponent,
     LoadingSpinnerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="explorer-container">
-      <!-- Breadcrumb -->
-      <p-breadcrumb [model]="breadcrumbItems" [home]="homeItem" />
-
+    <div class="explorer-page">
       <!-- Header -->
-      <header class="explorer-header">
+      <header class="page-header animate-fade-in">
+        <div class="header-nav">
+          <button class="back-btn" (click)="goBack()">
+            <i class="pi pi-arrow-left"></i>
+            <span>Back to Models</span>
+          </button>
+        </div>
+
         @if (modelsService.loading() && !model()) {
           <div class="header-skeleton">
             <div class="skeleton-line wide"></div>
@@ -52,99 +50,130 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
         } @else if (model()) {
           <div class="header-content">
             <div class="header-info">
+              <span class="model-badge">
+                <i class="pi pi-box"></i>
+                {{ model()!.problemType }}
+              </span>
               <h1>{{ model()!.name }}</h1>
               <p>{{ model()!.description }}</p>
             </div>
-            <div class="header-equation">
-              <app-equation-display
-                [latex]="getGoverningEquation()"
-                displayMode="block"
-              />
-            </div>
+
+            @if (getGoverningEquation()) {
+              <div class="header-equation animate-fade-in delay-2">
+                <app-equation-display
+                  [latex]="getGoverningEquation()"
+                  displayMode="block"
+                />
+              </div>
+            }
           </div>
         }
       </header>
 
-      @if (modelsService.error()) {
-        <app-error-display
-          [message]="modelsService.error()!"
-          title="Failed to load model"
-          [retryable]="true"
-          (retry)="loadModel()"
-        />
-      } @else {
-        <!-- Main Content -->
-        <div class="explorer-content">
-          <!-- Parameter Panel -->
-          <aside class="parameters-sidebar">
-            <app-parameter-panel
-              [parameters]="parameters()"
-              [parameterValues]="parameterValues()"
-              [rangeConfig]="rangeConfig()"
-              [loading]="inferenceService.loading()"
-              (parameterChange)="onParameterChange($event)"
-              (rangeChange)="onRangeChange($event)"
-              (runPrediction)="runPrediction()"
-            />
-          </aside>
+      <!-- Main Content -->
+      <div class="explorer-content">
+        <!-- Parameters Panel -->
+        <aside class="parameters-panel animate-fade-in delay-1">
+          <app-parameter-panel
+            [parameters]="parameters()"
+            [parameterValues]="parameterValues()"
+            [rangeConfig]="rangeConfig()"
+            [loading]="inferenceService.loading()"
+            (parameterChange)="onParameterChange($event)"
+            (rangeChange)="onRangeChange($event)"
+            (runPrediction)="runPrediction()"
+          />
+        </aside>
 
-          <!-- Results Panel -->
-          <main class="results-main">
-            <app-results-panel
-              [result]="predictionResult()"
-              [loading]="inferenceService.loading()"
-            >
-              <!-- Visualization -->
-              @if (predictionResult() && chartData().length > 0) {
-                @if (is2DVisualization()) {
-                  <app-three-scene
-                    [data]="surfaceData()"
-                    [autoRotate]="true"
-                  />
-                } @else {
-                  <app-plotly-chart
-                    [data]="chartData()"
-                    [layout]="chartLayout()"
-                  />
-                }
-              }
-            </app-results-panel>
-          </main>
-        </div>
-      }
+        <!-- Results Panel -->
+        <main class="results-panel animate-fade-in delay-2">
+          <app-results-panel
+            [result]="predictionResult()"
+            [loading]="inferenceService.loading()"
+          >
+            <!-- Visualization slot -->
+            @if (predictionResult() && chartData().length > 0) {
+              <div class="chart-wrapper">
+                <app-plotly-chart
+                  [data]="chartData()"
+                  [layout]="chartLayout()"
+                />
+              </div>
+            } @else if (!predictionResult() && !inferenceService.loading()) {
+              <div class="empty-chart">
+                <div class="empty-icon">
+                  <i class="pi pi-chart-line"></i>
+                </div>
+                <h3>No Results Yet</h3>
+                <p>Configure parameters and click "Run Prediction" to see results</p>
+                <p-button
+                  label="Run Prediction"
+                  icon="pi pi-play"
+                  styleClass="run-btn-empty"
+                  (onClick)="runPrediction()"
+                  [loading]="inferenceService.loading()"
+                />
+              </div>
+            }
+          </app-results-panel>
+        </main>
+      </div>
     </div>
   `,
   styles: [`
-    .explorer-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding: 1rem;
-      gap: 1rem;
+    .explorer-page {
+      min-height: 100vh;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
     }
 
-    .explorer-header {
-      background: var(--surface-section);
-      border-radius: 12px;
-      padding: 1.5rem;
+    // ============================================
+    // HEADER
+    // ============================================
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .header-nav {
+      margin-bottom: 1.5rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #7c3aed;
+        color: #a78bfa;
+      }
     }
 
     .header-skeleton {
       .skeleton-line {
         height: 1.5rem;
-        background: linear-gradient(90deg, var(--surface-border) 25%, var(--surface-overlay) 50%, var(--surface-border) 75%);
+        background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
 
         &.wide {
-          width: 60%;
-          height: 2rem;
+          width: 300px;
+          height: 2.5rem;
         }
 
         &:last-child {
-          width: 80%;
+          width: 500px;
           margin-bottom: 0;
         }
       }
@@ -160,6 +189,10 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
       justify-content: space-between;
       align-items: flex-start;
       gap: 2rem;
+      padding: 1.5rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      border-radius: 16px;
 
       @media (max-width: 1024px) {
         flex-direction: column;
@@ -168,33 +201,59 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
 
     .header-info {
       flex: 1;
+    }
 
-      h1 {
-        margin: 0 0 0.5rem;
-        font-size: 1.5rem;
-      }
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.2);
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      color: #a78bfa;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
 
-      p {
-        margin: 0;
-        color: var(--text-color-secondary);
-      }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-info > p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
     }
 
     .header-equation {
       flex-shrink: 0;
+      padding: 1.25rem 1.5rem;
+      background: rgba(3, 7, 18, 0.5);
+      border-radius: 12px;
+      max-width: 400px;
 
-      :host ::ng-deep .equation-container.block {
+      :host ::ng-deep .equation-container {
         margin: 0;
-        padding: 1rem;
+        padding: 0;
+        background: transparent;
       }
     }
 
+    // ============================================
+    // MAIN CONTENT
+    // ============================================
     .explorer-content {
-      flex: 1;
       display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 1rem;
-      min-height: 0;
+      grid-template-columns: 360px 1fr;
+      gap: 1.5rem;
+      min-height: 600px;
 
       @media (max-width: 1024px) {
         grid-template-columns: 1fr;
@@ -202,18 +261,91 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
       }
     }
 
-    .parameters-sidebar {
-      min-height: 0;
-      overflow: hidden;
-
+    .parameters-panel {
       @media (max-width: 1024px) {
         max-height: 400px;
       }
     }
 
-    .results-main {
-      min-height: 0;
-      overflow: hidden;
+    .results-panel {
+      min-height: 500px;
+    }
+
+    .chart-wrapper {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+    }
+
+    .empty-chart {
+      height: 100%;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+
+      .empty-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(124, 58, 237, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+
+        i {
+          font-size: 2.5rem;
+          color: #7c3aed;
+          opacity: 0.6;
+        }
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        color: #f1f5f9;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        max-width: 300px;
+      }
+    }
+
+    :host ::ng-deep .run-btn-empty {
+      background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+      border: none !important;
+      padding: 0.875rem 2rem !important;
+    }
+
+    // ============================================
+    // ANIMATIONS
+    // ============================================
+    .animate-fade-in {
+      opacity: 0;
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @for $i from 1 through 5 {
+      .delay-#{$i} {
+        animation-delay: #{$i * 100}ms;
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   `]
 })
@@ -223,10 +355,6 @@ export class InferenceExplorerComponent implements OnInit {
   modelsService = inject(ModelsService);
   inferenceService = inject(InferenceService);
   private physicsService = inject(PhysicsService);
-
-  // Breadcrumb
-  homeItem: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
-  breadcrumbItems: MenuItem[] = [];
 
   // State signals
   modelId = signal<string>('');
@@ -249,7 +377,7 @@ export class InferenceExplorerComponent implements OnInit {
       min: p.min,
       max: p.max,
       default: p.default,
-      step: p.step,
+      step: p.step || 0.1,
     }));
   });
 
@@ -269,9 +397,7 @@ export class InferenceExplorerComponent implements OnInit {
     const yData = outputs[outputKey];
 
     if (!Array.isArray(xData) || !Array.isArray(yData)) return [];
-
-    // Check if 2D output
-    if (Array.isArray(yData[0])) return [];
+    if (Array.isArray(yData[0])) return []; // 2D output not supported yet
 
     return [{
       x: xData,
@@ -280,8 +406,8 @@ export class InferenceExplorerComponent implements OnInit {
       mode: 'lines',
       name: outputKey,
       line: {
-        color: '#6366f1',
-        width: 2,
+        color: '#7c3aed',
+        width: 3,
       },
       hovertemplate: `${inputKey}: %{x:.4f}<br>${outputKey}: %{y:.4f}<extra></extra>`,
     }];
@@ -300,40 +426,7 @@ export class InferenceExplorerComponent implements OnInit {
     };
   });
 
-  is2DVisualization = computed(() => {
-    const result = this.predictionResult();
-    if (!result?.outputs) return false;
-
-    const outputKey = Object.keys(result.outputs)[0];
-    if (!outputKey) return false;
-
-    const output = result.outputs[outputKey];
-    return Array.isArray(output) && Array.isArray(output[0]);
-  });
-
-  surfaceData = computed<SurfaceData>(() => {
-    const result = this.predictionResult();
-    if (!result) return { x: [], y: [], z: [] };
-
-    const inputs = result.inputs;
-    const outputs = result.outputs;
-
-    const inputKeys = Object.keys(inputs);
-    const outputKey = Object.keys(outputs)[0];
-
-    if (inputKeys.length < 2 || !outputKey) {
-      return { x: [], y: [], z: [] };
-    }
-
-    return {
-      x: inputs[inputKeys[0]] || [],
-      y: inputs[inputKeys[1]] || [],
-      z: (outputs[outputKey] as number[][]) || [],
-    };
-  });
-
   constructor() {
-    // Initialize parameters when model loads
     effect(() => {
       const model = this.model();
       if (model) {
@@ -350,16 +443,8 @@ export class InferenceExplorerComponent implements OnInit {
     this.problemType.set(problemType);
     this.modelId.set(modelId);
 
-    this.updateBreadcrumb();
+    this.physicsService.loadProblems();
     this.loadModel();
-  }
-
-  private updateBreadcrumb(): void {
-    this.breadcrumbItems = [
-      { label: 'Problems', routerLink: '/problems' },
-      { label: this.problemType(), routerLink: `/gallery/${this.problemType()}` },
-      { label: 'Explorer' },
-    ];
   }
 
   loadModel(): void {
@@ -370,14 +455,12 @@ export class InferenceExplorerComponent implements OnInit {
   }
 
   private initializeFromModel(model: ModelDetail): void {
-    // Set default parameter values
     const defaults: ParameterValues = {};
     model.problemParams.forEach(p => {
       defaults[p.name] = p.trainedValue ?? p.default;
     });
     this.parameterValues.set(defaults);
 
-    // Set input range from model domain
     if (model.inputDomain?.variables?.length > 0) {
       const inputVar = model.inputDomain.variables[0];
       this.rangeConfig.set({
@@ -386,6 +469,9 @@ export class InferenceExplorerComponent implements OnInit {
         steps: 100,
       });
     }
+
+    // Auto-run prediction on load
+    setTimeout(() => this.runPrediction(), 500);
   }
 
   getGoverningEquation(): string {
@@ -419,6 +505,15 @@ export class InferenceExplorerComponent implements OnInit {
       this.predictionResult.set(result);
     } catch (error) {
       console.error('Prediction failed:', error);
+    }
+  }
+
+  goBack(): void {
+    const problemType = this.problemType();
+    if (problemType) {
+      this.router.navigate(['/gallery', problemType]);
+    } else {
+      this.router.navigate(['/gallery']);
     }
   }
 }

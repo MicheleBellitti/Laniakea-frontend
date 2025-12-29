@@ -2,7 +2,6 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { DividerModule } from 'primeng/divider';
 import { ParameterSliderComponent, ParameterSpec } from '../../../shared/components';
 
 export interface ParameterValues {
@@ -18,27 +17,28 @@ export interface RangeConfig {
 @Component({
   selector: 'app-parameter-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, DividerModule, ParameterSliderComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, ParameterSliderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="parameter-panel">
+      <!-- Header -->
       <div class="panel-header">
-        <h3>
+        <div class="header-title">
           <i class="pi pi-sliders-h"></i>
-          Parameters
-        </h3>
-        <p-button
-          icon="pi pi-refresh"
-          styleClass="p-button-text p-button-sm"
-          pTooltip="Reset to defaults"
-          (onClick)="resetToDefaults()"
-        />
+          <span>Parameters</span>
+        </div>
+        <button class="reset-btn" (click)="resetToDefaults()" title="Reset to defaults">
+          <i class="pi pi-refresh"></i>
+        </button>
       </div>
 
+      <!-- Content -->
       <div class="panel-content">
         <!-- Input Range Section -->
         <div class="section">
-          <h4>Input Range</h4>
+          <div class="section-header">
+            <h4>Input Range</h4>
+          </div>
           <div class="range-inputs">
             <div class="range-field">
               <label>Min</label>
@@ -72,23 +72,35 @@ export interface RangeConfig {
           </div>
         </div>
 
-        <p-divider />
+        <!-- Divider -->
+        <div class="divider"></div>
 
         <!-- Physics Parameters Section -->
         @if (parameters.length > 0) {
           <div class="section">
-            <h4>Physics Parameters</h4>
-            @for (param of parameters; track param.name) {
-              <app-parameter-slider
-                [parameter]="param"
-                [value]="parameterValues[param.name]"
-                (valueChange)="onParameterChange(param.name, $event)"
-              />
-            }
+            <div class="section-header">
+              <h4>Physics Parameters</h4>
+              <span class="param-count">{{ parameters.length }}</span>
+            </div>
+            <div class="parameters-list">
+              @for (param of parameters; track param.name) {
+                <app-parameter-slider
+                  [parameter]="param"
+                  [value]="parameterValues[param.name]"
+                  (valueChange)="onParameterChange(param.name, $event)"
+                />
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="no-params">
+            <i class="pi pi-info-circle"></i>
+            <span>No configurable parameters</span>
           </div>
         }
       </div>
 
+      <!-- Footer -->
       <div class="panel-footer">
         <p-button
           label="Run Prediction"
@@ -96,7 +108,7 @@ export interface RangeConfig {
           [loading]="loading"
           [disabled]="loading"
           (onClick)="runPrediction.emit()"
-          styleClass="p-button-primary run-button"
+          styleClass="run-button"
         />
       </div>
     </div>
@@ -106,45 +118,98 @@ export interface RangeConfig {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: var(--surface-section);
-      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      border-radius: 20px;
       overflow: hidden;
     }
 
+    // ============================================
+    // HEADER
+    // ============================================
     .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid var(--surface-border);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    }
 
-      h3 {
-        margin: 0;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
 
-        i {
-          color: var(--primary-color);
-        }
+      i {
+        color: #7c3aed;
       }
     }
 
+    .reset-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #7c3aed;
+        color: #a78bfa;
+        background: rgba(124, 58, 237, 0.1);
+      }
+    }
+
+    // ============================================
+    // CONTENT
+    // ============================================
     .panel-content {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 1.5rem;
     }
 
     .section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+
       h4 {
-        margin: 0 0 1rem;
-        font-size: 0.875rem;
-        color: var(--text-color-secondary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        margin: 0;
       }
+    }
+
+    .param-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: rgba(124, 58, 237, 0.2);
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #a78bfa;
     }
 
     .range-inputs {
@@ -156,35 +221,89 @@ export interface RangeConfig {
     .range-field {
       label {
         display: block;
-        font-size: 0.75rem;
-        color: var(--text-color-secondary);
-        margin-bottom: 0.25rem;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-bottom: 0.375rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
       }
     }
 
     .range-input {
       width: 100%;
-      padding: 0.5rem;
-      background: var(--surface-ground);
-      border: 1px solid var(--surface-border);
-      border-radius: 6px;
-      color: var(--text-color);
+      padding: 0.625rem 0.75rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #f1f5f9;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.875rem;
+      transition: all 0.2s ease;
 
       &:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+      }
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        opacity: 1;
       }
     }
 
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #334155, transparent);
+      margin: 1.5rem 0;
+    }
+
+    .parameters-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .no-params {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 2rem;
+      color: #64748b;
+      font-size: 0.875rem;
+
+      i {
+        opacity: 0.6;
+      }
+    }
+
+    // ============================================
+    // FOOTER
+    // ============================================
     .panel-footer {
-      padding: 1rem;
-      border-top: 1px solid var(--surface-border);
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(51, 65, 85, 0.5);
     }
 
     :host ::ng-deep .run-button {
       width: 100%;
+      justify-content: center;
+      background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+      border: none !important;
+      padding: 0.875rem 1.5rem !important;
+      font-weight: 600 !important;
+      border-radius: 12px !important;
+      transition: all 0.2s ease !important;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
     }
   `]
 })

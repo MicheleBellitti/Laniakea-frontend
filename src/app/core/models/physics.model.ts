@@ -1,11 +1,11 @@
 export interface ParameterSpec {
   name: string;
   symbol: string;
-  description: string;
+  description?: string;
   min: number;
   max: number;
   default: number;
-  step: number;
+  step?: number;
   unit?: string;
 }
 
@@ -13,12 +13,14 @@ export interface PhysicsMetadata {
   id: string;
   name: string;
   description: string;
-  category: 'stellar' | 'gravity' | 'quantum' | 'thermodynamics';
+  category: 'stellar' | 'gravity' | 'quantum' | 'thermodynamics' | string;
   governingEquation: string;
-  boundaryConditions: string[];
+  boundaryConditions?: string[];
   parameters: ParameterSpec[];
-  outputVariables: OutputVariable[];
-  physicsContext: string;
+  outputVariables?: OutputVariable[];
+  physicsContext?: string;
+  variables?: { name: string; description: string; min: number; max: number }[];
+  applications?: string[];
 }
 
 export interface OutputVariable {

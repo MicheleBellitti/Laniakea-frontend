@@ -1,11 +1,13 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
+import { MockDataService } from './mock-data.service';
 import { ModelSummary, ModelDetail, ModelsResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ModelsService {
   private api = inject(ApiService);
+  private mockData = inject(MockDataService);
 
   // Private writable signals
   private _models = signal<ModelSummary[]>([]);
@@ -49,7 +51,9 @@ export class ModelsService {
       );
       this._models.set(response.models);
     } catch (err) {
-      this._error.set(err instanceof Error ? err.message : 'Failed to load models');
+      // Use mock data when API is unavailable
+      console.info('Using mock data for models');
+      this._models.set(this.mockData.getModels(problemType));
     } finally {
       this._loading.set(false);
     }
@@ -65,7 +69,10 @@ export class ModelsService {
       );
       this._selectedModel.set(model);
     } catch (err) {
-      this._error.set(err instanceof Error ? err.message : 'Failed to load model details');
+      // Use mock data when API is unavailable
+      console.info('Using mock data for model details');
+      const model = this.mockData.getModelDetail(modelId);
+      this._selectedModel.set(model);
     } finally {
       this._loading.set(false);
     }

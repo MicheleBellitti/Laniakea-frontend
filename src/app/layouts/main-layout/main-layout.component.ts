@@ -29,6 +29,8 @@ import { FooterComponent } from './footer/footer.component';
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
+      position: relative;
     }
   `]
 })
