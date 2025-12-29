@@ -202,7 +202,7 @@ import { ScientificNotationPipe } from '../../shared/pipes';
                   <i class="pi pi-sync"></i>
                 </span>
                 <div class="metric-content">
-                  <span class="metric-value">{{ formatNumber(selectedModel()!.metrics.epochs) }}</span>
+                  <span class="metric-value">{{ formatNumber(selectedModel()!.metrics?.epochs) }}</span>
                   <span class="metric-label">Epochs</span>
                 </div>
               </div>
@@ -669,7 +669,30 @@ export class ModelGalleryComponent implements OnInit {
 
   onSelectModel(model: ModelSummary): void {
     this.detailsDialogVisible = false;
-    this.router.navigate(['/explore', model.problemType, model.id]);
+    
+    // Ensure problemType and id are defined
+    const problemType = model?.problemType || this.problemType() || '';
+    const modelId = model?.id || '';
+    
+    if (!problemType || !modelId) {
+      console.error('Cannot navigate: Model missing required fields', { 
+        model,
+        hasModel: !!model,
+        problemType: model?.problemType,
+        modelId: model?.id,
+        fallbackProblemType: this.problemType()
+      });
+      // Show user-friendly error
+      alert('Unable to load model. Please try again.');
+      return;
+    }
+    
+    try {
+      this.router.navigate(['/explore', problemType, modelId]);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      alert('Navigation failed. Please try again.');
+    }
   }
 
   onViewDetails(model: ModelSummary): void {
@@ -681,10 +704,12 @@ export class ModelGalleryComponent implements OnInit {
     this.router.navigate(['/problems']);
   }
 
-  formatNumber(num: number): string {
+  formatNumber(num: number | undefined | null): string {
+    if (num == null || isNaN(num)) return '0';
     if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
   }
 }
+

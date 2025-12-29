@@ -32,19 +32,19 @@ import { ScientificNotationPipe } from '../../../shared/pipes';
         <div class="metrics-grid">
           <div class="metric" pTooltip="Total training loss" tooltipPosition="top">
             <span class="metric-label">Loss</span>
-            <span class="metric-value">{{ model.metrics.totalLoss | scientificNotation }}</span>
+            <span class="metric-value">{{ model.metrics?.totalLoss | scientificNotation }}</span>
           </div>
           <div class="metric" pTooltip="Physics-informed loss" tooltipPosition="top">
             <span class="metric-label">Physics</span>
-            <span class="metric-value">{{ model.metrics.physicsLoss | scientificNotation }}</span>
+            <span class="metric-value">{{ model.metrics?.physicsLoss | scientificNotation }}</span>
           </div>
           <div class="metric" pTooltip="Training epochs" tooltipPosition="top">
             <span class="metric-label">Epochs</span>
-            <span class="metric-value">{{ formatNumber(model.metrics.epochs) }}</span>
+            <span class="metric-value">{{ formatNumber(model.metrics?.epochs) }}</span>
           </div>
           <div class="metric" pTooltip="Training time" tooltipPosition="top">
             <span class="metric-label">Time</span>
-            <span class="metric-value">{{ formatTime(model.metrics.trainingTime) }}</span>
+            <span class="metric-value">{{ formatTime(model.metrics?.trainingTime) }}</span>
           </div>
         </div>
 
@@ -260,14 +260,16 @@ export class ModelCardComponent {
   @Output() select = new EventEmitter<ModelSummary>();
   @Output() viewDetails = new EventEmitter<ModelSummary>();
 
-  formatNumber(num: number): string {
+  formatNumber(num: number | undefined | null): string {
+    if (num == null || isNaN(num)) return '0';
     if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
   }
 
-  formatTime(seconds: number): string {
+  formatTime(seconds: number | undefined | null): string {
+    if (seconds == null || isNaN(seconds)) return '0s';
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     return `${(seconds / 3600).toFixed(1)}h`;
