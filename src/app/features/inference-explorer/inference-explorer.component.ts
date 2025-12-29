@@ -456,15 +456,23 @@ export class InferenceExplorerComponent implements OnInit {
 
   private initializeFromModel(model: ModelDetail): void {
     const defaults: ParameterValues = {};
-    if (model.problemParams) {
-      model.problemParams.forEach(p => {
-        defaults[p.name] = p.trainedValue ?? p.default;
+
+    // Handle both camelCase and snake_case from API
+    const modelAny = model as unknown as Record<string, unknown>;
+    const problemParams = model.problemParams || modelAny['problem_params'] as typeof model.problemParams;
+    const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
+
+    if (problemParams) {
+      problemParams.forEach(p => {
+        const pAny = p as unknown as Record<string, unknown>;
+        const trainedValue = p.trainedValue ?? pAny['trained_value'] as number | undefined;
+        defaults[p.name] = trainedValue ?? p.default;
       });
     }
     this.parameterValues.set(defaults);
 
-    if (model.inputDomain?.variables?.length > 0) {
-      const inputVar = model.inputDomain.variables[0];
+    if (inputDomain?.variables?.length > 0) {
+      const inputVar = inputDomain.variables[0];
       this.rangeConfig.set({
         min: inputVar.min,
         max: inputVar.max,
@@ -496,8 +504,14 @@ export class InferenceExplorerComponent implements OnInit {
     const range = this.rangeConfig();
     const params = this.parameterValues();
 
-    // Get the input variable name from the model's input domain (e.g., 'xi', 'x', 'r', etc.)
-    const inputVarName = model.inputDomain?.variables?.[0]?.name || 'x';
+    // Get the input variable name from the model's input domain
+    // Handle both camelCase (inputDomain) and snake_case (input_domain) from API
+    const modelAny = model as unknown as Record<string, unknown>;
+    const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
+    const variables = inputDomain?.variables;
+    const inputVarName = variables?.[0]?.name || variables?.[0]?.symbol || 'x';
+
+    console.log('Running prediction with input variable:', inputVarName, 'model:', model);
 
     try {
       const result = await this.inferenceService.predict({
