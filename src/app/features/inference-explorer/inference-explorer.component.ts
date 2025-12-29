@@ -14,6 +14,7 @@ import { ModelsService, InferenceService, PhysicsService } from '../../core/serv
 import { PredictionResult, ModelDetail, InputDomain, DomainVariable } from '../../core/models';
 import { ParameterPanelComponent, ParameterValues, RangeConfig } from './parameter-panel/parameter-panel.component';
 import { ResultsPanelComponent } from './results-panel/results-panel.component';
+import { PhysicsInterpretationComponent } from './physics-interpretation/physics-interpretation.component';
 import { PlotlyChartComponent, PlotlyData, PlotlyLayout } from '../visualization/plotly-chart/plotly-chart.component';
 import { EquationDisplayComponent, LoadingSpinnerComponent } from '../../shared/components';
 import { ParameterSpec } from '../../shared/components/parameter-slider/parameter-slider.component';
@@ -26,6 +27,7 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
     ButtonModule,
     ParameterPanelComponent,
     ResultsPanelComponent,
+    PhysicsInterpretationComponent,
     PlotlyChartComponent,
     EquationDisplayComponent,
     LoadingSpinnerComponent,
@@ -93,10 +95,18 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
           >
             <!-- Visualization slot -->
             @if (predictionResult() && chartData().length > 0) {
-              <div class="chart-wrapper">
+              <div class="chart-wrapper" [class.chart-3d]="is2DProblem()">
                 <app-plotly-chart
                   [data]="chartData()"
                   [layout]="chartLayout()"
+                />
+              </div>
+
+              <!-- Physics Interpretation -->
+              <div class="interpretation-wrapper animate-fade-in delay-3">
+                <app-physics-interpretation
+                  [problemType]="problemType()"
+                  [outputKeys]="getOutputKeys()"
                 />
               </div>
             } @else if (!predictionResult() && !inferenceService.loading()) {
@@ -275,6 +285,15 @@ import { ParameterSpec } from '../../shared/components/parameter-slider/paramete
       width: 100%;
       height: 100%;
       min-height: 400px;
+
+      &.chart-3d {
+        min-height: 500px;
+      }
+    }
+
+    .interpretation-wrapper {
+      margin-top: 1rem;
+      padding: 0 0.5rem;
     }
 
     .empty-chart {
@@ -362,6 +381,7 @@ export class InferenceExplorerComponent implements OnInit {
   parameterValues = signal<ParameterValues>({});
   rangeConfig = signal<RangeConfig>({ min: 0, max: 10, steps: 100 });
   predictionResult = signal<PredictionResult | null>(null);
+  visualizationMode = signal<'auto' | 'surface' | 'heatmap' | 'contour' | 'line'>('auto');
 
   // Computed signals
   model = computed(() => this.modelsService.selectedModel());
@@ -381,6 +401,14 @@ export class InferenceExplorerComponent implements OnInit {
     }));
   });
 
+  // Detect if this is a 2D problem based on input structure
+  is2DProblem = computed(() => {
+    const result = this.predictionResult();
+    if (!result) return false;
+    const inputKeys = Object.keys(result.inputs);
+    return inputKeys.length >= 2;
+  });
+
   chartData = computed<PlotlyData[]>(() => {
     const result = this.predictionResult();
     const model = this.model();
@@ -388,29 +416,149 @@ export class InferenceExplorerComponent implements OnInit {
 
     const inputs = result.inputs;
     const outputs = result.outputs;
-
     const inputKeys = Object.keys(inputs);
     const outputKeys = Object.keys(outputs);
 
     if (inputKeys.length === 0 || outputKeys.length === 0) return [];
 
-    const xData = inputs[inputKeys[0]];
+    const modelAny = model as unknown as Record<string, unknown>;
+    const pType = model?.problemType || modelAny?.['problem_type'] as string || '';
+
+    // Check if this is a 2D problem (two input variables like x, y)
+    if (inputKeys.length >= 2) {
+      return this.create2DVisualization(inputs, outputs, inputKeys, outputKeys, pType);
+    }
+
+    // 1D problem visualization
+    return this.create1DVisualization(inputs, outputs, inputKeys, outputKeys, pType, model);
+  });
+
+  private create2DVisualization(
+    inputs: Record<string, unknown>,
+    outputs: Record<string, unknown>,
+    inputKeys: string[],
+    outputKeys: string[],
+    problemType: string
+  ): PlotlyData[] {
+    const xData = inputs[inputKeys[0]] as number[];
+    const yData = inputs[inputKeys[1]] as number[];
+    const zData = outputs[outputKeys[0]];
+
+    if (!Array.isArray(xData) || !Array.isArray(yData)) return [];
+
+    // For 2D problems, create a 3D surface plot
+    // The output should be a 2D array for surface plots
+    if (Array.isArray(zData) && Array.isArray(zData[0])) {
+      // Already 2D array
+      const z2D = zData as number[][];
+      return [{
+        x: xData,
+        y: yData,
+        z: z2D,
+        type: 'surface',
+        colorscale: this.getColorscaleForProblem(problemType),
+        colorbar: {
+          title: this.getOutputLabel(outputKeys[0], problemType),
+          tickfont: { color: '#e5e7eb' },
+          titlefont: { color: '#e5e7eb' },
+        },
+        hovertemplate: `x: %{x:.3f}<br>y: %{y:.3f}<br>${outputKeys[0]}: %{z:.6f}<extra></extra>`,
+        contours: {
+          z: {
+            show: true,
+            usecolormap: true,
+            highlightcolor: '#ffffff',
+            project: { z: true }
+          }
+        },
+        lighting: {
+          ambient: 0.6,
+          diffuse: 0.5,
+          specular: 0.2,
+          roughness: 0.5,
+        },
+        lightposition: {
+          x: 100,
+          y: 200,
+          z: 0
+        }
+      } as PlotlyData];
+    }
+
+    // If flat array, we need to reshape it into a 2D grid
+    if (Array.isArray(zData)) {
+      const gridSize = Math.sqrt(zData.length);
+      if (Number.isInteger(gridSize)) {
+        const z2D: number[][] = [];
+        for (let i = 0; i < gridSize; i++) {
+          z2D.push((zData as number[]).slice(i * gridSize, (i + 1) * gridSize));
+        }
+
+        // Create unique x and y arrays for the grid
+        const uniqueX = [...new Set(xData)].sort((a, b) => a - b);
+        const uniqueY = [...new Set(yData)].sort((a, b) => a - b);
+
+        return [{
+          x: uniqueX,
+          y: uniqueY,
+          z: z2D,
+          type: 'surface',
+          colorscale: this.getColorscaleForProblem(problemType),
+          colorbar: {
+            title: this.getOutputLabel(outputKeys[0], problemType),
+            tickfont: { color: '#e5e7eb' },
+            titlefont: { color: '#e5e7eb' },
+          },
+          hovertemplate: `x: %{x:.3f}<br>y: %{y:.3f}<br>${outputKeys[0]}: %{z:.6f}<extra></extra>`,
+          contours: {
+            z: {
+              show: true,
+              usecolormap: true,
+              highlightcolor: '#ffffff',
+              project: { z: true }
+            }
+          },
+          lighting: {
+            ambient: 0.6,
+            diffuse: 0.5,
+            specular: 0.2,
+            roughness: 0.5,
+          }
+        } as PlotlyData];
+      }
+    }
+
+    return [];
+  }
+
+  private create1DVisualization(
+    inputs: Record<string, unknown>,
+    outputs: Record<string, unknown>,
+    inputKeys: string[],
+    outputKeys: string[],
+    problemType: string,
+    model: ModelDetail | null
+  ): PlotlyData[] {
+    const xData = inputs[inputKeys[0]] as number[];
     if (!Array.isArray(xData)) return [];
 
-    // Color palette for multiple traces
+    const modelAny = model as unknown as Record<string, unknown>;
+    const domain = model?.inputDomain || modelAny?.['input_domain'] as InputDomain | undefined;
+    const inputSymbol = domain?.variables?.[0]?.symbol || inputKeys[0];
+
+    // Color palette
     const colors = ['#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899'];
 
-    // Check if any output is 2D (for heatmap/surface plots)
+    // Check if output is 2D (shouldn't happen for 1D input, but handle it)
     const firstOutput = outputs[outputKeys[0]];
     if (Array.isArray(firstOutput) && Array.isArray(firstOutput[0])) {
-      // 2D output - create heatmap
       const zData = firstOutput as number[][];
       return [{
         x: xData,
         y: Array.from({ length: zData.length }, (_, i) => i),
         z: zData,
         type: 'heatmap',
-        colorscale: 'Viridis',
+        colorscale: this.getColorscaleForProblem(problemType),
         colorbar: {
           title: outputKeys[0],
           tickfont: { color: '#9ca3af' },
@@ -419,34 +567,86 @@ export class InferenceExplorerComponent implements OnInit {
       }];
     }
 
-    // Get input symbol for hover template
-    const modelAny = model as unknown as Record<string, unknown>;
-    const domain = model?.inputDomain || modelAny?.['input_domain'] as InputDomain | undefined;
-    const inputSymbol = domain?.variables?.[0]?.symbol || inputKeys[0];
-
-    // 1D outputs - create line traces for each output variable
+    // Standard 1D line traces with enhanced styling for Lane-Emden
     const traces = outputKeys.map((outputKey, index) => {
       const yData = outputs[outputKey];
       if (!Array.isArray(yData) || Array.isArray(yData[0])) {
         return null;
       }
 
+      const isLaneEmden = problemType.includes('lane') || problemType.includes('emden');
+      const outputLabel = this.getOutputLabel(outputKey, problemType);
+
       return {
         x: xData,
         y: yData as number[],
         type: 'scatter' as const,
         mode: 'lines' as const,
-        name: outputKey,
+        name: outputLabel,
         line: {
           color: colors[index % colors.length],
-          width: 2.5,
+          width: isLaneEmden ? 3 : 2.5,
         },
-        hovertemplate: `${inputSymbol}: %{x:.4f}<br>${outputKey}: %{y:.6f}<extra></extra>`,
+        fill: isLaneEmden ? 'tozeroy' : undefined,
+        fillcolor: isLaneEmden ? 'rgba(124, 58, 237, 0.1)' : undefined,
+        hovertemplate: `${inputSymbol}: %{x:.4f}<br>${outputLabel}: %{y:.6f}<extra></extra>`,
       };
     }).filter((trace): trace is NonNullable<typeof trace> => trace !== null);
 
     return traces;
-  });
+  }
+
+  private getColorscaleForProblem(problemType: string): string {
+    if (problemType.includes('poisson') || problemType.includes('gravity')) {
+      // Purple-blue gradient for gravitational potential (deeper = more negative)
+      return 'Viridis';
+    }
+    if (problemType.includes('lane') || problemType.includes('emden')) {
+      // Orange-red for stellar density (hot core)
+      return 'Hot';
+    }
+    if (problemType.includes('heat') || problemType.includes('diffusion')) {
+      return 'RdYlBu';
+    }
+    if (problemType.includes('schrodinger') || problemType.includes('quantum')) {
+      return 'Portland';
+    }
+    return 'Viridis';
+  }
+
+  private getOutputLabel(outputKey: string, problemType: string): string {
+    // Map output variable names to physical meanings
+    const labelMap: Record<string, Record<string, string>> = {
+      'lane_emden': {
+        'theta': 'θ (Density Profile)',
+        'y': 'θ (Density Profile)',
+      },
+      'poisson_gravity': {
+        'phi': 'φ (Gravitational Potential)',
+        'potential': 'φ (Gravitational Potential)',
+        'y': 'φ (Gravitational Potential)',
+      },
+      'schrodinger': {
+        'psi': 'ψ (Wave Function)',
+        'y': 'ψ (Wave Function)',
+      },
+      'heat': {
+        'T': 'T (Temperature)',
+        'temperature': 'T (Temperature)',
+        'y': 'T (Temperature)',
+      }
+    };
+
+    // Find matching problem type
+    for (const [pType, labels] of Object.entries(labelMap)) {
+      if (problemType.includes(pType) || problemType.replace('-', '_').includes(pType)) {
+        const label = labels[outputKey.toLowerCase()] || labels['y'];
+        if (label) return label;
+      }
+    }
+
+    return outputKey;
+  }
 
   chartLayout = computed<Partial<PlotlyLayout>>(() => {
     const result = this.predictionResult();
@@ -455,19 +655,67 @@ export class InferenceExplorerComponent implements OnInit {
 
     const inputKeys = Object.keys(result.inputs);
     const outputKeys = Object.keys(result.outputs);
+    const is2D = inputKeys.length >= 2;
 
-    // Get axis labels from model metadata with symbols
     const modelAny = model as unknown as Record<string, unknown>;
     const domain = model?.inputDomain || modelAny?.['input_domain'] as InputDomain | undefined;
-    const inputVar = domain?.variables?.[0];
+    const pType = model?.problemType || modelAny?.['problem_type'] as string || '';
 
+    if (is2D) {
+      // 3D surface layout for 2D problems
+      const zLabel = this.getOutputLabel(outputKeys[0], pType);
+
+      return {
+        scene: {
+          xaxis: {
+            title: 'x',
+            gridcolor: 'rgba(75, 85, 99, 0.5)',
+            backgroundcolor: 'rgba(15, 23, 42, 0.8)',
+            tickfont: { color: '#9ca3af' },
+            titlefont: { color: '#e5e7eb' },
+          },
+          yaxis: {
+            title: 'y',
+            gridcolor: 'rgba(75, 85, 99, 0.5)',
+            backgroundcolor: 'rgba(15, 23, 42, 0.8)',
+            tickfont: { color: '#9ca3af' },
+            titlefont: { color: '#e5e7eb' },
+          },
+          zaxis: {
+            title: zLabel,
+            gridcolor: 'rgba(75, 85, 99, 0.5)',
+            backgroundcolor: 'rgba(15, 23, 42, 0.8)',
+            tickfont: { color: '#9ca3af' },
+            titlefont: { color: '#e5e7eb' },
+          },
+          camera: {
+            eye: { x: 1.5, y: 1.5, z: 1.2 },
+            center: { x: 0, y: 0, z: -0.1 },
+          },
+          aspectmode: 'cube',
+          bgcolor: 'rgba(15, 23, 42, 0.95)',
+        },
+        margin: { t: 30, r: 30, b: 30, l: 30 },
+        showlegend: false,
+      } as Partial<PlotlyLayout>;
+    }
+
+    // 1D layout
+    const inputVar = domain?.variables?.[0];
     const xLabel = inputVar?.symbol
       ? `${inputVar.symbol} (${inputVar.name || inputKeys[0]})`
       : inputKeys[0] || 'x';
 
-    const yLabel = outputKeys.length === 1 ? outputKeys[0] : 'Output';
+    const yLabel = this.getOutputLabel(outputKeys[0], pType);
+
+    // Add physical interpretation title for Lane-Emden
+    const isLaneEmden = pType.includes('lane') || pType.includes('emden');
+    const title = isLaneEmden
+      ? { text: 'Stellar Density Profile', font: { color: '#a78bfa', size: 14 } }
+      : undefined;
 
     return {
+      title,
       xaxis: {
         title: xLabel,
         gridcolor: 'rgba(75, 85, 99, 0.3)',
@@ -739,5 +987,11 @@ export class InferenceExplorerComponent implements OnInit {
     } else {
       this.router.navigate(['/gallery']);
     }
+  }
+
+  getOutputKeys(): string[] {
+    const result = this.predictionResult();
+    if (!result?.outputs) return [];
+    return Object.keys(result.outputs);
   }
 }

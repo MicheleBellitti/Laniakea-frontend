@@ -56,6 +56,37 @@ export interface PlotlyLayout {
     titlefont?: { color?: string };
     range?: [number, number];
   };
+  // 3D scene configuration
+  scene?: {
+    xaxis?: {
+      title?: string;
+      gridcolor?: string;
+      backgroundcolor?: string;
+      tickfont?: { color?: string };
+      titlefont?: { color?: string };
+    };
+    yaxis?: {
+      title?: string;
+      gridcolor?: string;
+      backgroundcolor?: string;
+      tickfont?: { color?: string };
+      titlefont?: { color?: string };
+    };
+    zaxis?: {
+      title?: string;
+      gridcolor?: string;
+      backgroundcolor?: string;
+      tickfont?: { color?: string };
+      titlefont?: { color?: string };
+    };
+    camera?: {
+      eye?: { x?: number; y?: number; z?: number };
+      center?: { x?: number; y?: number; z?: number };
+      up?: { x?: number; y?: number; z?: number };
+    };
+    aspectmode?: 'auto' | 'cube' | 'data' | 'manual';
+    bgcolor?: string;
+  };
   paper_bgcolor?: string;
   plot_bgcolor?: string;
   font?: { color?: string };
@@ -72,6 +103,21 @@ export interface PlotlyLayout {
   autosize?: boolean;
   height?: number;
   width?: number;
+  // Polar layout for radial plots
+  polar?: {
+    radialaxis?: {
+      visible?: boolean;
+      range?: [number, number];
+      tickfont?: { color?: string };
+      gridcolor?: string;
+    };
+    angularaxis?: {
+      visible?: boolean;
+      tickfont?: { color?: string };
+      gridcolor?: string;
+    };
+    bgcolor?: string;
+  };
 }
 
 @Component({
