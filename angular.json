@@ -51,6 +51,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/primeng/resources/themes/lara-dark-indigo/fonts",
+                "output": "/media"
               }
             ],
             "styles": [

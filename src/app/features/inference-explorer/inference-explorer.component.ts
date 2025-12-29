@@ -523,7 +523,7 @@ export class InferenceExplorerComponent implements OnInit {
     const problemParams = model.problemParams || modelAny['problem_params'] as typeof model.problemParams;
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
 
-    if (problemParams) {
+    if (Array.isArray(problemParams)) {
       problemParams.forEach(p => {
         const pAny = p as unknown as Record<string, unknown>;
         const trainedValue = p.trainedValue ?? pAny['trained_value'] as number | undefined;
