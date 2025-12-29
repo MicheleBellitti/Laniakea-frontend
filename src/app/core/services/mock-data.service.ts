@@ -243,7 +243,12 @@ export class MockDataService {
       inputs: { x },
       outputs: { y },
       computationTime: Math.floor(Math.random() * 50) + 10,
-      modelId
+      modelId,
+      metadata: {
+        inputShape: [x.length],
+        outputShape: [y.length],
+        timestamp: new Date().toISOString()
+      }
     };
   }
 }

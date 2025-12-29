@@ -33,7 +33,7 @@ import { EquationDisplayComponent } from '../../../shared/components';
         </div>
 
         <!-- Parameters -->
-        @if (problem.parameters && problem.parameters.length > 0) {
+        @if (problem.parameters.length > 0) {
           <div class="parameters-section">
             <span class="section-label">Parameters</span>
             <div class="params-list">

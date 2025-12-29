@@ -37,7 +37,7 @@ export class InferenceService {
       // Use mock prediction when API is unavailable
       console.info('Using mock prediction');
       
-      const inputSpec = request.inputs?.x as RangeSpec | number[];
+      const inputSpec = request.inputs?.['x'] as RangeSpec | number[];
       let range: { min: number; max: number; steps: number };
       
       if (Array.isArray(inputSpec)) {
