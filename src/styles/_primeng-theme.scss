@@ -1,0 +1,506 @@
+@use 'variables' as *;
+
+// ============================================
+// PRIMENG CUSTOM THEME - LANIAKEA
+// ============================================
+
+:root {
+  // Primary
+  --primary-color: #{$cosmic-violet};
+  --primary-color-text: #{$sunlight};
+  --primary-50: #{rgba($cosmic-violet, 0.1)};
+  --primary-100: #{rgba($cosmic-violet, 0.2)};
+  --primary-200: #{rgba($cosmic-violet, 0.3)};
+  --primary-300: #{rgba($cosmic-violet, 0.5)};
+  --primary-400: #{$cosmic-violet};
+  --primary-500: #{$cosmic-violet};
+  --primary-600: #{darken($cosmic-violet, 5%)};
+  --primary-700: #{darken($cosmic-violet, 10%)};
+
+  // Surfaces
+  --surface-ground: #{$void-black};
+  --surface-section: #{$space-dark};
+  --surface-card: #{$nebula-gray};
+  --surface-overlay: #{$asteroid-gray};
+  --surface-border: #{$asteroid-gray};
+  --surface-hover: #{rgba($cosmic-violet, 0.15)};
+
+  // Text
+  --text-color: #{$sunlight};
+  --text-color-secondary: #{$starlight};
+
+  // Focus
+  --focus-ring: 0 0 0 2px #{$space-dark}, 0 0 0 4px #{$cosmic-violet};
+
+  // Mask
+  --maskbg: #{rgba($void-black, 0.8)};
+
+  // Content (for menus, dropdowns)
+  --content-padding: #{$space-4};
+  --inline-spacing: #{$space-2};
+
+  // Highlight
+  --highlight-bg: #{rgba($cosmic-violet, 0.2)};
+  --highlight-text-color: #{$sunlight};
+}
+
+// ============================================
+// COMPONENT OVERRIDES
+// ============================================
+
+// === BUTTONS ===
+.p-button {
+  border-radius: $radius-md;
+  font-weight: 600;
+  font-family: $font-body;
+  letter-spacing: 0.01em;
+  transition: all $duration-base $ease-smooth;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform $duration-slow $ease-smooth;
+  }
+
+  &:hover::before {
+    transform: translateX(100%);
+  }
+
+  &.p-button-primary {
+    background: $gradient-cosmic;
+    border: none;
+    box-shadow: $shadow-md;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: $glow-violet, $shadow-lg;
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  &.p-button-secondary {
+    background: transparent;
+    border: 1px solid $asteroid-gray;
+    color: $sunlight;
+
+    &:hover:not(:disabled) {
+      background: rgba($cosmic-violet, 0.1);
+      border-color: $cosmic-violet;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.p-button-text {
+    background: transparent;
+    border: none;
+    color: $starlight;
+
+    &:hover:not(:disabled) {
+      background: rgba($cosmic-violet, 0.1);
+      color: $sunlight;
+    }
+  }
+
+  &.p-button-outlined {
+    background: transparent;
+    border: 1px solid $cosmic-violet;
+    color: $cosmic-violet;
+
+    &:hover:not(:disabled) {
+      background: rgba($cosmic-violet, 0.1);
+    }
+  }
+
+  &.p-button-lg {
+    padding: $space-4 $space-8;
+    font-size: $text-lg;
+  }
+
+  &.p-button-sm {
+    padding: $space-2 $space-4;
+    font-size: $text-sm;
+  }
+}
+
+// === CARDS ===
+.p-card {
+  background: $gradient-card;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba($asteroid-gray, 0.5);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  transition: all $duration-base $ease-smooth;
+  overflow: hidden;
+
+  &:hover {
+    border-color: rgba($cosmic-violet, 0.5);
+    box-shadow: $glow-violet, $shadow-xl;
+    transform: translateY(-4px);
+  }
+
+  .p-card-header {
+    border-bottom: 1px solid rgba($asteroid-gray, 0.5);
+    padding: $space-4 $space-6;
+    background: transparent;
+  }
+
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: $space-6;
+  }
+
+  .p-card-footer {
+    border-top: 1px solid rgba($asteroid-gray, 0.5);
+    padding: $space-4 $space-6;
+    background: rgba($void-black, 0.3);
+  }
+}
+
+// === INPUTS ===
+.p-inputtext {
+  background: rgba($void-black, 0.5);
+  border: 1px solid $asteroid-gray;
+  border-radius: $radius-md;
+  color: $sunlight;
+  font-family: $font-body;
+  transition: all $duration-fast $ease-smooth;
+
+  &::placeholder {
+    color: $dust-gray;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $dust-gray;
+  }
+
+  &:focus {
+    border-color: $cosmic-violet;
+    box-shadow: 0 0 0 3px rgba($cosmic-violet, 0.2);
+    outline: none;
+  }
+}
+
+.p-inputnumber {
+  .p-inputtext {
+    font-family: $font-mono;
+  }
+}
+
+// === SLIDERS ===
+.p-slider {
+  background: $asteroid-gray;
+  border-radius: $radius-full;
+  height: 6px;
+
+  .p-slider-range {
+    background: $gradient-cosmic;
+    border-radius: $radius-full;
+  }
+
+  .p-slider-handle {
+    width: 20px;
+    height: 20px;
+    background: $sunlight;
+    border: 3px solid $cosmic-violet;
+    border-radius: $radius-full;
+    box-shadow: $glow-violet;
+    transition: all $duration-fast $ease-smooth;
+    margin-top: -7px;
+    margin-left: -10px;
+
+    &:hover {
+      transform: scale(1.2);
+      box-shadow: $glow-violet, $shadow-md;
+    }
+
+    &:focus {
+      box-shadow: $glow-violet, 0 0 0 4px rgba($cosmic-violet, 0.3);
+    }
+  }
+}
+
+// === DIALOGS ===
+.p-dialog {
+  background: $nebula-gray;
+  border: 1px solid $asteroid-gray;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  backdrop-filter: blur(16px);
+
+  .p-dialog-header {
+    background: transparent;
+    border-bottom: 1px solid $asteroid-gray;
+    padding: $space-6;
+    border-radius: $radius-xl $radius-xl 0 0;
+
+    .p-dialog-title {
+      font-family: $font-display;
+      font-weight: 600;
+      font-size: $text-xl;
+    }
+  }
+
+  .p-dialog-content {
+    background: transparent;
+    padding: $space-6;
+  }
+
+  .p-dialog-footer {
+    background: rgba($void-black, 0.3);
+    border-top: 1px solid $asteroid-gray;
+    padding: $space-4 $space-6;
+    border-radius: 0 0 $radius-xl $radius-xl;
+  }
+}
+
+.p-dialog-mask {
+  backdrop-filter: blur(4px);
+}
+
+// === TAGS ===
+.p-tag {
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: $space-1 $space-3;
+
+  &.p-tag-success {
+    background: rgba($aurora-cyan, 0.2);
+    color: $aurora-cyan;
+  }
+
+  &.p-tag-warning {
+    background: rgba($solar-amber, 0.2);
+    color: $solar-amber;
+  }
+
+  &.p-tag-danger {
+    background: rgba($supernova-red, 0.2);
+    color: $supernova-red;
+  }
+
+  &.p-tag-info {
+    background: rgba($stellar-blue, 0.2);
+    color: $stellar-blue;
+  }
+}
+
+// === TOOLTIPS ===
+.p-tooltip {
+  .p-tooltip-text {
+    background: $nebula-gray;
+    border: 1px solid $asteroid-gray;
+    color: $sunlight;
+    border-radius: $radius-md;
+    box-shadow: $shadow-lg;
+    font-size: $text-sm;
+    padding: $space-2 $space-3;
+  }
+
+  .p-tooltip-arrow {
+    border-color: transparent;
+  }
+}
+
+// === SKELETON ===
+.p-skeleton {
+  background: linear-gradient(
+    90deg,
+    $asteroid-gray 0%,
+    $dust-gray 50%,
+    $asteroid-gray 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite ease-in-out;
+  border-radius: $radius-md;
+
+  &::after {
+    display: none;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// === PROGRESS SPINNER ===
+.p-progress-spinner {
+  .p-progress-spinner-circle {
+    stroke: $cosmic-violet;
+    animation: spinner-dash 1.5s ease-in-out infinite,
+               spinner-colors 6s ease-in-out infinite;
+  }
+}
+
+@keyframes spinner-colors {
+  0%, 100% { stroke: $cosmic-violet; }
+  25% { stroke: $stellar-blue; }
+  50% { stroke: $aurora-cyan; }
+  75% { stroke: $nebula-purple; }
+}
+
+// === DROPDOWN ===
+.p-dropdown {
+  background: rgba($void-black, 0.5);
+  border: 1px solid $asteroid-gray;
+  border-radius: $radius-md;
+  transition: all $duration-fast $ease-smooth;
+
+  &:hover:not(.p-disabled) {
+    border-color: $dust-gray;
+  }
+
+  &.p-focus {
+    border-color: $cosmic-violet;
+    box-shadow: 0 0 0 3px rgba($cosmic-violet, 0.2);
+  }
+
+  .p-dropdown-label {
+    color: $sunlight;
+  }
+
+  .p-dropdown-trigger {
+    color: $starlight;
+  }
+}
+
+.p-dropdown-panel {
+  background: $nebula-gray;
+  border: 1px solid $asteroid-gray;
+  border-radius: $radius-md;
+  box-shadow: $shadow-xl;
+
+  .p-dropdown-items {
+    .p-dropdown-item {
+      color: $sunlight;
+      transition: all $duration-fast $ease-smooth;
+
+      &:hover {
+        background: rgba($cosmic-violet, 0.15);
+      }
+
+      &.p-highlight {
+        background: rgba($cosmic-violet, 0.25);
+        color: $sunlight;
+      }
+    }
+  }
+}
+
+// === SELECT BUTTON ===
+.p-selectbutton {
+  .p-button {
+    background: transparent;
+    border: 1px solid $asteroid-gray;
+    color: $starlight;
+
+    &:first-child {
+      border-radius: $radius-md 0 0 $radius-md;
+    }
+
+    &:last-child {
+      border-radius: 0 $radius-md $radius-md 0;
+    }
+
+    &.p-highlight {
+      background: $cosmic-violet;
+      border-color: $cosmic-violet;
+      color: $sunlight;
+    }
+
+    &:hover:not(.p-highlight):not(:disabled) {
+      background: rgba($cosmic-violet, 0.1);
+      border-color: $cosmic-violet;
+      color: $sunlight;
+    }
+  }
+}
+
+// === TOAST ===
+.p-toast {
+  .p-toast-message {
+    background: $nebula-gray;
+    border: 1px solid $asteroid-gray;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-xl;
+    backdrop-filter: blur(12px);
+
+    &.p-toast-message-error {
+      border-left: 4px solid $supernova-red;
+    }
+
+    &.p-toast-message-success {
+      border-left: 4px solid $aurora-cyan;
+    }
+
+    &.p-toast-message-warn {
+      border-left: 4px solid $solar-amber;
+    }
+
+    &.p-toast-message-info {
+      border-left: 4px solid $stellar-blue;
+    }
+
+    .p-toast-message-content {
+      color: $sunlight;
+    }
+
+    .p-toast-summary {
+      font-weight: 600;
+    }
+
+    .p-toast-detail {
+      color: $starlight;
+    }
+  }
+}
+
+// === BREADCRUMB ===
+.p-breadcrumb {
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  .p-breadcrumb-list {
+    .p-menuitem-link {
+      color: $starlight;
+      transition: color $duration-fast $ease-smooth;
+
+      &:hover {
+        color: $cosmic-violet;
+      }
+
+      .p-menuitem-icon {
+        color: $starlight;
+      }
+    }
+
+    .p-menuitem-separator {
+      color: $dust-gray;
+    }
+  }
+}
+
+// === DIVIDER ===
+.p-divider {
+  &.p-divider-horizontal {
+    border-top: 1px solid $asteroid-gray;
+
+    &::before {
+      border-top: 1px solid $asteroid-gray;
+    }
+  }
+}

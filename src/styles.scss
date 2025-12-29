@@ -1,0 +1,431 @@
+// ============================================
+// LANIAKEA - GLOBAL STYLES
+// ============================================
+
+@use 'styles/variables' as *;
+@use 'styles/primeng-theme';
+
+// === IMPORTS ===
+// Google Fonts loaded via index.html to avoid build inlining issues
+
+// === RESET ===
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-body;
+  font-size: $text-base;
+  line-height: 1.6;
+  color: $sunlight;
+  background: $void-black;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// === TYPOGRAPHY ===
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-display;
+  font-weight: 600;
+  line-height: 1.2;
+  color: $sunlight;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: $text-5xl; }
+h2 { font-size: $text-4xl; }
+h3 { font-size: $text-3xl; }
+h4 { font-size: $text-2xl; }
+h5 { font-size: $text-xl; }
+h6 { font-size: $text-lg; }
+
+p {
+  color: $starlight;
+  margin-bottom: $space-4;
+}
+
+a {
+  color: $cosmic-violet;
+  text-decoration: none;
+  transition: color $duration-fast $ease-smooth;
+
+  &:hover {
+    color: $nebula-purple;
+  }
+}
+
+code, pre {
+  font-family: $font-mono;
+}
+
+code {
+  background: rgba($cosmic-violet, 0.15);
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+  font-size: $text-sm;
+  color: $nebula-purple;
+}
+
+pre {
+  background: $nebula-gray;
+  padding: $space-4;
+  border-radius: $radius-md;
+  overflow-x: auto;
+  border: 1px solid $asteroid-gray;
+}
+
+// === SELECTION ===
+::selection {
+  background: rgba($cosmic-violet, 0.4);
+  color: $sunlight;
+}
+
+// === FOCUS ===
+:focus-visible {
+  outline: 2px solid $cosmic-violet;
+  outline-offset: 2px;
+}
+
+// === SCROLLBAR ===
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: $space-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $asteroid-gray;
+  border-radius: $radius-full;
+  border: 2px solid $space-dark;
+
+  &:hover {
+    background: $dust-gray;
+  }
+}
+
+// Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: $asteroid-gray $space-dark;
+}
+
+// === UTILITY CLASSES ===
+
+// Text
+.text-primary { color: $sunlight; }
+.text-secondary { color: $starlight; }
+.text-muted { color: $dust-gray; }
+.text-accent { color: $cosmic-violet; }
+.text-gradient {
+  background: $gradient-cosmic;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Backgrounds
+.bg-void { background: $void-black; }
+.bg-space { background: $space-dark; }
+.bg-nebula { background: $nebula-gray; }
+.bg-gradient { background: $gradient-cosmic; }
+.bg-glass {
+  background: rgba($nebula-gray, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba($asteroid-gray, 0.5);
+}
+
+// Borders
+.border-subtle { border: 1px solid $asteroid-gray; }
+.border-glow { border: 1px solid rgba($cosmic-violet, 0.5); }
+
+// Shadows
+.shadow-glow { box-shadow: $glow-violet; }
+.shadow-lg { box-shadow: $shadow-lg; }
+
+// Border radius
+.rounded-sm { border-radius: $radius-sm; }
+.rounded-md { border-radius: $radius-md; }
+.rounded-lg { border-radius: $radius-lg; }
+.rounded-xl { border-radius: $radius-xl; }
+.rounded-full { border-radius: $radius-full; }
+
+// === ANIMATIONS ===
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: $glow-violet;
+  }
+  50% {
+    box-shadow: $glow-blue;
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Animation classes
+.animate-fade-in {
+  animation: fadeIn $duration-slow $ease-smooth forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp $duration-slow $ease-smooth forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft $duration-slow $ease-smooth forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight $duration-slow $ease-smooth forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+// Stagger animation delays
+@for $i from 1 through 10 {
+  .delay-#{$i} {
+    animation-delay: #{$i * 100}ms;
+  }
+}
+
+// === GLASS CARD ===
+.glass-card {
+  background: rgba($nebula-gray, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba($asteroid-gray, 0.5);
+  border-radius: $radius-lg;
+  transition: all $duration-base $ease-smooth;
+
+  &:hover {
+    border-color: rgba($cosmic-violet, 0.5);
+    box-shadow: $glow-violet;
+    transform: translateY(-4px);
+  }
+}
+
+// === CATEGORY BADGES ===
+.badge-stellar {
+  background: rgba($category-stellar, 0.2);
+  color: $category-stellar;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-gravity {
+  background: rgba($category-gravity, 0.2);
+  color: $category-gravity;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-quantum {
+  background: rgba($category-quantum, 0.2);
+  color: $category-quantum;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+.badge-thermo {
+  background: rgba($category-thermo, 0.2);
+  color: $category-thermo;
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 600;
+}
+
+// === KATEX STYLING ===
+.katex {
+  font-size: 1.1em;
+  color: $sunlight;
+}
+
+.katex-display {
+  margin: $space-4 0;
+  padding: $space-4;
+  background: rgba($void-black, 0.5);
+  border-radius: $radius-md;
+  overflow-x: auto;
+}
+
+// === PLOTLY ADJUSTMENTS ===
+.js-plotly-plot {
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+// === LOADING OVERLAY ===
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba($void-black, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  backdrop-filter: blur(8px);
+}
+
+// === CONTAINER ===
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 $space-6;
+
+  @media (max-width: $screen-md) {
+    padding: 0 $space-4;
+  }
+}
+
+// === COSMIC BACKGROUND ===
+.cosmic-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba($cosmic-violet, 0.15) 0%, transparent 70%);
+    top: -200px;
+    right: -200px;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba($stellar-blue, 0.1) 0%, transparent 70%);
+    bottom: -100px;
+    left: -100px;
+    animation: float 10s ease-in-out infinite reverse;
+  }
+}
+
