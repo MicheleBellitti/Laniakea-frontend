@@ -496,11 +496,14 @@ export class InferenceExplorerComponent implements OnInit {
     const range = this.rangeConfig();
     const params = this.parameterValues();
 
+    // Get the input variable name from the model's input domain (e.g., 'xi', 'x', 'r', etc.)
+    const inputVarName = model.inputDomain?.variables?.[0]?.name || 'x';
+
     try {
       const result = await this.inferenceService.predict({
         modelId: model.id,
         inputs: {
-          x: this.inferenceService.buildRangeInputs(range.min, range.max, range.steps),
+          [inputVarName]: this.inferenceService.buildRangeInputs(range.min, range.max, range.steps),
         },
         parameters: params,
       });
