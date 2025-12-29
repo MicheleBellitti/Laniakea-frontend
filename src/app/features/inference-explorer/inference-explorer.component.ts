@@ -622,13 +622,21 @@ export class InferenceExplorerComponent implements OnInit {
     const range = this.rangeConfig();
     const params = this.parameterValues();
 
+    // Debug: log full model structure to understand API response
+    console.log('Full model structure:', JSON.stringify(model, null, 2));
+
     // Get the input variable name from the model's input domain
     // Handle both camelCase (inputDomain) and snake_case (input_domain) from API
     const modelAny = model as unknown as Record<string, unknown>;
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
+
+    console.log('inputDomain:', inputDomain);
+
     // Handle both 'variables' and 'input_variables' from API
     const inputDomainAny = inputDomain as unknown as Record<string, unknown>;
     const variables = inputDomain?.variables || inputDomainAny?.['input_variables'] as typeof inputDomain.variables;
+
+    console.log('variables:', variables);
 
     if (!variables || variables.length === 0) {
       console.error('No input variables found in model definition');
