@@ -81,6 +81,6 @@ export class AppComponent {
         });
         this.errorService.dismiss(error.id);
       });
-    });
+    }, { allowSignalWrites: true });
   }
 }

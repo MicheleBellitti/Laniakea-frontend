@@ -368,7 +368,7 @@ export class InferenceExplorerComponent implements OnInit {
 
   parameters = computed<ParameterSpec[]>(() => {
     const model = this.model();
-    if (!model) return [];
+    if (!model || !model.problemParams) return [];
 
     return model.problemParams.map(p => ({
       name: p.name,
@@ -456,9 +456,11 @@ export class InferenceExplorerComponent implements OnInit {
 
   private initializeFromModel(model: ModelDetail): void {
     const defaults: ParameterValues = {};
-    model.problemParams.forEach(p => {
-      defaults[p.name] = p.trainedValue ?? p.default;
-    });
+    if (model.problemParams) {
+      model.problemParams.forEach(p => {
+        defaults[p.name] = p.trainedValue ?? p.default;
+      });
+    }
     this.parameterValues.set(defaults);
 
     if (model.inputDomain?.variables?.length > 0) {
