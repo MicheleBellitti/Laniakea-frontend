@@ -493,7 +493,7 @@ export class InferenceExplorerComponent implements OnInit {
       if (model) {
         this.initializeFromModel(model);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {
@@ -532,8 +532,12 @@ export class InferenceExplorerComponent implements OnInit {
     }
     this.parameterValues.set(defaults);
 
-    if (inputDomain?.variables?.length > 0) {
-      const inputVar = inputDomain.variables[0];
+    // Handle both 'variables' and 'input_variables' from API
+    const inputDomainAny = inputDomain as unknown as Record<string, unknown>;
+    const variables = inputDomain?.variables || inputDomainAny?.['input_variables'] as typeof inputDomain.variables;
+
+    if (variables?.length > 0) {
+      const inputVar = variables[0];
       this.rangeConfig.set({
         min: inputVar.min,
         max: inputVar.max,
@@ -622,8 +626,10 @@ export class InferenceExplorerComponent implements OnInit {
     // Handle both camelCase (inputDomain) and snake_case (input_domain) from API
     const modelAny = model as unknown as Record<string, unknown>;
     const inputDomain = model.inputDomain || modelAny['input_domain'] as typeof model.inputDomain;
-    const variables = inputDomain?.variables;
-    
+    // Handle both 'variables' and 'input_variables' from API
+    const inputDomainAny = inputDomain as unknown as Record<string, unknown>;
+    const variables = inputDomain?.variables || inputDomainAny?.['input_variables'] as typeof inputDomain.variables;
+
     if (!variables || variables.length === 0) {
       console.error('No input variables found in model definition');
       return;
